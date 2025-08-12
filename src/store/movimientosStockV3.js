@@ -154,14 +154,25 @@ const movimientosStockV3 ={
             .catch(error => {
                 console.group('❌ Error HTTP');
                 console.log('Error completo:', error);
-                console.log('Status HTTP:', error?.response?.status);
-                console.log('Response data:', error?.response?.data);
+
+                if (!(error && error.response)) {
+                    console.log('Error sin respuesta del servidor');
+                    console.groupEnd();
+                    const technicalError = new Error('Error técnico');
+                    technicalError.type = 'TECHNICAL_ERROR';
+                    technicalError.originalError = error;
+                    reject(technicalError);
+                    return;
+                }
+
+                console.log('Status HTTP:', error.response.status);
+                console.log('Response data:', error.response.data);
                 console.groupEnd();
 
-                const backendData = error?.response?.data;
+                const backendData = error.response.data;
 
                 if (backendData?.status === 'ERROR') {
-                    const errorMessage = backendData?.mensaje || 'Error de negocio desconocido';
+                    const errorMessage = error.response.data.mensaje || 'Error de negocio desconocido';
                     const businessError = new Error(errorMessage);
                     businessError.type = 'BUSINESS_ERROR';
                     businessError.error = backendData?.error;
@@ -169,14 +180,6 @@ const movimientosStockV3 ={
 
                     console.log('❌ Error de negocio:', errorMessage);
                     reject(businessError);
-                    return;
-                }
-
-                if (!error.response) {
-                    const technicalError = new Error('Error técnico');
-                    technicalError.type = 'TECHNICAL_ERROR';
-                    technicalError.originalError = error;
-                    reject(technicalError);
                     return;
                 }
 
