@@ -168,29 +168,28 @@ const movimientosStockV3 ={
                 console.log('Status HTTP:', error?.response?.status);
                 console.log('Response data:', error?.response?.data);
                 console.groupEnd();
-                
+
                 const httpStatus = error?.response?.status;
-                
-                // HTTP 404 = Error de negocio (producto no existe)
-                if (httpStatus === 404) {
-                    const businessError = new Error('El producto no existe para esta empresa');
-                    businessError.type = 'BUSINESS_ERROR';
-                    businessError.error = 'PRODUCTO_NO_EXISTE';
-                    businessError.data = error?.response?.data;
-                    businessError.status = 404;
-                    
-                    console.log('❌ Error de negocio (404): Producto no existe');
-                    reject(businessError);
+
+                // Cualquier status HTTP >= 400 se considera error técnico
+                if (httpStatus >= 400) {
+                    const technicalError = new Error('Error técnico en la comunicación');
+                    technicalError.type = 'TECHNICAL_ERROR';
+                    technicalError.originalError = error;
+                    technicalError.status = httpStatus;
+
+                    console.log(`❌ Error técnico (${httpStatus}): Problema de comunicación`);
+                    reject(technicalError);
                     return;
                 }
-                
-                // Otros HTTP status = Error técnico
+
+                // Errores sin status HTTP (problemas de red, etc.)
                 const technicalError = new Error('Error técnico en la comunicación');
                 technicalError.type = 'TECHNICAL_ERROR';
                 technicalError.originalError = error;
                 technicalError.status = httpStatus;
-                
-                console.log(`❌ Error técnico (${httpStatus}): Problema de comunicación`);
+
+                console.log('❌ Error técnico: Problema de comunicación');
                 reject(technicalError);
             });
         });
