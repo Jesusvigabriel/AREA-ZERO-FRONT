@@ -95,10 +95,10 @@ const movimientosStockV3 ={
      * Crea un movimiento de stock por partida
      * 
      * CONTRATO:
-     * - Retorna: response (objeto con status, mensaje, data)
-     * - Éxito: response.status === "SUCCESS" → resolve(response)
-     * - Error: response.status === "ERROR" → reject con mensaje de negocio
-     * - Error HTTP: problemas de red/servidor → reject con error técnico
+     * - Retorna: response.data (objeto con status, mensaje, data)
+     * - Éxito: HTTP 2xx → resolve(response.data)
+     * - Error: error.response.data.status === "ERROR" → reject con mensaje de negocio
+     * - Error técnico: sin respuesta estructurada del backend → reject con error técnico
      * 
      * ESTRUCTURA DE RESPUESTA EXITOSA:
      * {
@@ -133,34 +133,24 @@ const movimientosStockV3 ={
             })
             .then(response => {
                 console.group('✅ Respuesta del Backend');
-                console.log('Response:', response);
-                console.log('Status lógico:', response?.status);
+                console.log('HTTP Status:', response?.status);
+                console.log('Data:', response?.data);
                 console.groupEnd();
 
-                // CONTRATO: Verificar status lógico del backend
-                if (response && response.status === 'ERROR') {
-                    // Error de negocio - rechazar con mensaje del backend
-                    const errorMessage = response.mensaje || 'Error de negocio desconocido';
-                    const businessError = new Error(errorMessage);
-                    businessError.type = 'BUSINESS_ERROR';
-                    businessError.error = response.error;
-                    businessError.data = response;
-
-                    console.log('❌ Error de negocio:', errorMessage);
-                    reject(businessError);
+                // Éxito HTTP: resolver con data
+                if (response?.status >= 200 && response?.status < 300) {
+                    console.log('✅ Operación exitosa:', response?.data?.mensaje);
+                    resolve(response?.data);
                     return;
                 }
 
-                if (response && response.status === 'SUCCESS') {
-                    // Éxito - resolver con response
-                    console.log('✅ Operación exitosa:', response.mensaje);
-                    resolve(response);
-                    return;
-                }
-
-                // Si no tiene status, tratar como warning pero continuar
-                console.warn('⚠️ Respuesta sin status definido, asumiendo éxito');
-                resolve(response || {});
+                // Cualquier otro status HTTP se considera error técnico
+                const technicalError = new Error('Error técnico en la comunicación');
+                technicalError.type = 'TECHNICAL_ERROR';
+                technicalError.originalResponse = response;
+                technicalError.status = response?.status;
+                console.log('❌ Error técnico: Respuesta inesperada');
+                reject(technicalError);
             })
             .catch(error => {
                 console.group('❌ Error HTTP');
@@ -169,41 +159,26 @@ const movimientosStockV3 ={
                 console.log('Response data:', error?.response?.data);
                 console.groupEnd();
 
-                // Primero, verificar si el backend respondió con un error estructurado
-                const backendStatus = error?.response?.data?.status;
-                if (backendStatus === 'ERROR') {
-                    const errorMessage = error?.response?.data?.mensaje || 'Error de negocio desconocido';
+                const backendData = error?.response?.data;
+
+                if (backendData?.status === 'ERROR') {
+                    const errorMessage = backendData?.mensaje || 'Error de negocio desconocido';
                     const businessError = new Error(errorMessage);
                     businessError.type = 'BUSINESS_ERROR';
-                    businessError.error = error?.response?.data?.error;
-                    businessError.data = error?.response?.data;
+                    businessError.error = backendData?.error;
+                    businessError.data = backendData;
 
                     console.log('❌ Error de negocio:', errorMessage);
                     reject(businessError);
                     return;
                 }
 
-                const httpStatus = error?.response?.status;
-
-                // Cualquier status HTTP >= 400 se considera error técnico si no hay error de negocio
-                if (httpStatus >= 400) {
-                    const technicalError = new Error('Error técnico en la comunicación');
-                    technicalError.type = 'TECHNICAL_ERROR';
-                    technicalError.originalError = error;
-                    technicalError.status = httpStatus;
-
-                    console.log(`❌ Error técnico (${httpStatus}): Problema de comunicación`);
-                    reject(technicalError);
-                    return;
-                }
-
-                // Errores sin status HTTP (problemas de red, etc.)
+                // Sin respuesta estructurada del backend → Error técnico
                 const technicalError = new Error('Error técnico en la comunicación');
                 technicalError.type = 'TECHNICAL_ERROR';
                 technicalError.originalError = error;
-                technicalError.status = httpStatus;
-
-                console.log('❌ Error técnico: Problema de comunicación');
+                technicalError.status = error?.response?.status;
+                console.log('❌ Error técnico');
                 reject(technicalError);
             });
         });
