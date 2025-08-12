@@ -169,9 +169,23 @@ const movimientosStockV3 ={
                 console.log('Response data:', error?.response?.data);
                 console.groupEnd();
 
+                // Primero, verificar si el backend respondió con un error estructurado
+                const backendStatus = error?.response?.data?.status;
+                if (backendStatus === 'ERROR') {
+                    const errorMessage = error?.response?.data?.mensaje || 'Error de negocio desconocido';
+                    const businessError = new Error(errorMessage);
+                    businessError.type = 'BUSINESS_ERROR';
+                    businessError.error = error?.response?.data?.error;
+                    businessError.data = error?.response?.data;
+
+                    console.log('❌ Error de negocio:', errorMessage);
+                    reject(businessError);
+                    return;
+                }
+
                 const httpStatus = error?.response?.status;
 
-                // Cualquier status HTTP >= 400 se considera error técnico
+                // Cualquier status HTTP >= 400 se considera error técnico si no hay error de negocio
                 if (httpStatus >= 400) {
                     const technicalError = new Error('Error técnico en la comunicación');
                     technicalError.type = 'TECHNICAL_ERROR';
