@@ -1,0 +1,20 @@
+#@pathUrl = http://localhost:8080/apiv3
+@pathUrl = https://apiv3.area54sa.com.ar:8125/apiv3
+
+#@credenciales = Basic A54APIDev A54API4470Dev!
+@credenciales = Basic A54APIProd A54API4470Prod!
+#@credenciales = Basic A54APIProdUniversal A54API4470ProdUniversal!
+
+### Obtiene Todos los Productos de una Empresa
+GET {{pathUrl}}/productos/allByEmpresa/133
+Authorization: {{credenciales}}
+
+### Devuelve un producto por su Id / IdEmpresa
+GET {{pathUrl}}/productos/byId/59007/163
+Authorization: {{credenciales}}
+
+### Obtiene un Producto por su Barcode // Id Empresa
+GET {{pathUrl}}/productos/byBarcodeYEmpresa/NT500J/163
+Authorization: {{credenciales}}
+
+

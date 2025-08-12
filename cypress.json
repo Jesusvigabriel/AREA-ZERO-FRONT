@@ -1,0 +1,6 @@
+{
+  "pluginsFile": "tests/e2e/plugins/index.js",
+  "projectId": "k7jvnf",
+  "baseUrl": "http://localhost:8080",
+  "video": false
+}

@@ -1,0 +1,43 @@
+image: node:14.17.5
+
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Compilar
+          caches:
+            - node
+          script:
+            - npm install
+            - npm run build-area
+          artifacts:
+            - dist/**
+      - step:
+          name: "Deployar a Producción"
+          deployment: "production"
+          script:
+            - pipe: atlassian/ftp-deploy:0.3.6
+              variables:
+                USER: 'A54FTPVUE'
+                PASSWORD: 'FTPA54Gestion'
+                SERVER: 'ftp://ftp.area54sa.com.ar:10021'
+                REMOTE_PATH: '/'
+                LOCAL_PATH: 'dist'
+                DELETE_FLAG: 'false' 
+                # DEBUG: '<boolean>' # Optional
+                # EXTRA_ARGS: '<string>' # Optional.
+          after-script:
+            - ALERT_TYPE="Exito"
+            - NOMBRE_SISTEMA="A54 - Gestión"
+            - if [[ $BITBUCKET_EXIT_CODE -ne 0 ]]; then ALERT_TYPE="error" ; fi
+            - pipe: atlassian/email-notify:0.4.5
+              variables:
+                HOST: 'email-smtp.us-east-1.amazonaws.com'
+                USERNAME: 'AKIA4UL5BS45SUFJWIUP'
+                PASSWORD: 'BO/U2khL5ieBb3iwELI/dtp4lRg+GNm55DnkRszhJaDF'
+                PORT: '587'
+                FROM: 'info@area54sa.com.ar'
+                TO: 'leolob@logiciel.com.ar'
+                SUBJECT: '${NOMBRE_SISTEMA} - Deploy a Producción de rama ${BITBUCKET_BRANCH}: ${ALERT_TYPE}'
+                DEBUG: 'true'
+                BODY_PLAIN: '${NOMBRE_SISTEMA} - Se ha deployado exitosamente la rama ${BITBUCKET_BRANCH}'

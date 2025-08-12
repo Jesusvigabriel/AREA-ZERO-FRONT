@@ -1,0 +1,499 @@
+/* Using Google Fonts instead of local files */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+
+/* Aplicar fuente DM Sans con peso 500 a toda la aplicación */
+html, .v-application {
+  position: relative;
+}
+
+/* LOGOS DE FONDO COMENTADOS - NO SE MUESTRAN POR AHORA */
+/*
+.v-application::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background: url('~@/assets/LOGO_AREATECH_NEGRO.svg') no-repeat center center;
+  background-size: 90vw 90vh;
+  opacity: 0.08;
+  z-index: 0;
+}
+
+.theme--dark.v-application::before,
+.theme--dark .v-application::before {
+  background: url('~@/assets/LOGO_AREATECH_AZUL.svg') no-repeat center center !important;
+  background-size: 90vw 90vh !important;
+  opacity: 0.09 !important;
+}
+*/
+
+
+
+
+/* Heredar la fuente y peso en todos los elementos */
+.v-application,
+.v-application .display-4,
+.v-application .display-3,
+.v-application .display-2,
+.v-application .display-1,
+.v-application .headline,
+.v-application .title,
+.v-application .subtitle-1,
+.v-application .subtitle-2,
+.v-application .body-1,
+.v-application .body-2,
+.v-application .caption,
+.v-application .overline,
+.v-application .text-h1,
+.v-application .text-h2,
+.v-application .text-h3,
+.v-application .text-h4,
+.v-application .text-h5,
+.v-application .text-h6,
+.v-application .text-subtitle-1,
+.v-application .text-subtitle-2,
+.v-application .text-body-1,
+.v-application .text-body-2,
+.v-application .text-button,
+.v-application .text-caption,
+.v-application .text-overline {
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Asegurar que los botones y campos de formulario hereden la fuente */
+.v-btn,
+.v-text-field input,
+.v-select .v-select__selection,
+.v-input__slot,
+.v-list-item,
+.v-tab {
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Color de texto de tabs en Panel Seguimientos modo oscuro */
+.theme--dark .seguimiento-tabs .v-tab {
+  color: #DBE1E5 !important;
+}
+
+/* Asegurar que los títulos de las tarjetas y diálogos tengan el mismo peso */
+.v-card__title,
+.v-dialog .v-card__title,
+.v-toolbar__title {
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Estilos para las cabeceras de las tablas */
+.v-data-table thead th,
+.v-data-table-header th,
+.v-data-table-header th .v-icon,
+.v-data-table-header th span {
+  background-color: var(--v-menubar-base) !important;
+  color: #FFFFFF !important; /* Texto blanco para mejor contraste */
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Acomoda el texto y la flecha de orden en columna */
+.v-data-table-header th .v-data-table-header__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Reserva espacio para la flecha y mantenla siempre oculta */
+.v-data-table-header th .v-icon {
+  min-height: 20px;
+  margin-bottom: 2px;
+  opacity: 0 !important;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+/* Nunca mostrar la flecha, ni en hover ni activa */
+.v-data-table-header th.sortable .v-icon,
+.v-data-table-header th .v-icon.v-icon--active {
+  opacity: 0 !important;
+}
+
+/* Asegurar que los íconos en las cabeceras hereden el color */
+.v-data-table-header th {
+  color: #FFFFFF !important;
+  position: relative;
+  vertical-align: top;
+  padding-top: 22px !important; /* Ajusta si necesitas más espacio arriba */
+}
+
+/* Campos de entrada con bordes redondeados */
+.v-text-field--outlined fieldset {
+  border-radius: 8px !important;
+}
+
+.v-text-field--outlined.v-input--dense .v-input__control {
+  min-height: 40px;
+}
+
+/* Asegurar que los campos de entrada tengan el mismo estilo */
+.v-text-field.v-text-field--enclosed .v-input__prepend-outer,
+.v-text-field.v-text-field--enclosed .v-input__prepend-inner,
+.v-text-field.v-text-field--enclosed .v-input__append-inner,
+.v-text-field.v-text-field--enclosed .v-input__append-outer {
+  margin-top: 8px;
+}
+
+/* Estilo para los campos de entrada en el tema oscuro */
+.theme--dark .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state) > .v-input__control > .v-input__slot fieldset {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme--dark .v-text-field--outlined.v-input--is-focused > .v-input__control > .v-input__slot fieldset {
+  border-color: var(--v-primary-base) !important;
+}
+
+/* Asegurar que los encabezados de pestañas tengan el mismo estilo */
+.v-tab {
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Panel Seguimientos: color tabs modo oscuro */
+.theme--dark .seguimiento-tabs .v-tab {
+  color: #DBE1E5 !important;
+}
+.theme--dark .seguimiento-tabs .v-tab--active {
+  color: #DBE1E5 !important;
+  font-weight: 700 !important;
+}
+
+.v-application {
+  background-color: var(--v-background-base) !important;
+}
+
+/* Row striping for data tables */
+.v-data-table tbody tr:nth-child(3n+1) {
+  background-color: var(--table-row-1-bg);
+}
+.v-data-table tbody tr:nth-child(3n+2) {
+  background-color: var(--table-row-2-bg);
+}
+.v-data-table tbody tr:nth-child(3n) {
+  background-color: var(--table-row-3-bg);
+}
+
+/* Dark theme row striping */
+.theme--dark .v-data-table tbody tr:nth-child(3n+1) {
+  background-color: var(--table-row-1-bg);
+}
+.theme--dark .v-data-table tbody tr:nth-child(3n+2) {
+  background-color: var(--table-row-2-bg);
+}
+.theme--dark .v-data-table tbody tr:nth-child(3n) {
+  background-color: var(--table-row-3-bg);
+}
+
+/* Row striping for plain tables */
+table tbody tr:nth-child(3n+1) {
+  background-color: var(--table-row-1-bg);
+}
+table tbody tr:nth-child(3n+2) {
+  background-color: var(--table-row-2-bg);
+}
+table tbody tr:nth-child(3n) {
+  background-color: var(--table-row-3-bg);
+}
+
+/* Dark theme row striping */
+.theme--dark table tbody tr:nth-child(3n+1) {
+  background-color: var(--table-row-1-bg);
+}
+.theme--dark table tbody tr:nth-child(3n+2) {
+  background-color: var(--table-row-2-bg);
+}
+.theme--dark table tbody tr:nth-child(3n) {
+  background-color: var(--table-row-3-bg);
+}
+
+/* Texto oscuro y bordes para tablas en tema oscuro */
+.theme--dark .v-data-table td,
+.theme--dark table td {
+  color: #000000;
+  border-bottom: 1px solid #56555a;
+}
+
+.theme--light .v-data-table td,
+.theme--light table td {
+  border-bottom: 1px solid #56555a !important;
+}
+
+.theme--dark .v-data-table td:not(:last-child),
+.theme--dark table td:not(:last-child) {
+  border-right: 1px solid #56555a;
+}
+
+.theme--light .v-data-table td:not(:last-child),
+.theme--light table td:not(:last-child) {
+  border-right: 1px solid #56555a !important;
+}
+
+.v-data-table,
+table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+.theme--dark .v-data-table,
+.theme--dark table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+/* Form headers color matches menu bar */
+.v-dialog .v-card-title,
+.v-dialog .v-toolbar {
+  background-color: var(--v-primary-base) !important;
+  color: #fff !important;
+}
+
+/* Reusable header class matching the menubar color */
+.header-menubar {
+  background-color: var(--v-menubar-base);
+  color: #fff;
+}
+
+/* Ensure form text contrasts with card backgrounds */
+.v-card .v-card-text {
+  color: #fff; /* same as menu bar text */
+}
+
+.theme--light .v-card .v-card-text {
+  color: #191043; /* dark text for light cards */
+}
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+}
+
+.capitalize-words {
+  text-transform: capitalize;
+}
+
+/* Keep submenu titles normal even when active */
+.v-list-item--active .v-list-item-title,
+.v-list-group--active > .v-list-group__items .v-list-item .v-list-item__title,
+.v-list-group--active > .v-list-group__items .v-list-item--active .v-list-item__title {
+  font-weight: 500 !important;
+}
+
+/* Match table headers with the menu bar color */
+.v-data-table thead th {
+  background-color: var(--v-menubar-base);
+  color: #fff;
+}
+.search-field .v-input__slot {
+  background-color: #232326 !important;
+  border-radius: 8px !important;
+  color: #f4fafe !important;
+  box-shadow: none !important;
+  border: none !important;
+  min-height: 44px;
+}
+.theme--dark .search-field .v-input__slot {
+  background-color: var(--search-field-bg) !important;
+  color: #212124 !important;
+}
+.theme--light .search-field .v-input__slot {
+  background-color: var(--search-field-bg) !important;
+  color: #56555a !important;
+}
+.search-field input {
+  color: #f4fafe !important;
+}
+.theme--light .search-field input {
+  color: #56555a !important;
+}
+.theme--dark .search-field input {
+  color: #212124 !important;
+}
+.search-field .v-input__prepend-outer,
+.search-field .v-input__append-inner {
+  color: #f4fafe !important;
+}
+.theme--dark .search-field .v-input__prepend-outer,
+.theme--dark .search-field .v-input__append-inner {
+  color: #212124 !important;
+}
+.theme--light .search-field .v-input__prepend-outer,
+.theme--light .search-field .v-input__append-inner {
+  color: #56555a !important;
+}
+.theme--dark .search-field .v-input__slot {
+  border-radius: 8px !important;
+  background-color: var(--search-field-bg) !important;
+  color: #212124 !important;
+}
+.theme--light .search-field .v-input__slot {
+  border-radius: 8px !important;
+  background-color: var(--search-field-bg) !important;
+  color: #56555a !important;
+}
+
+/* Standardized button style for actions */
+.action-button { background-color: var(--action-button-bg); color: var(--action-button-text); }
+.theme--dark .action-button { background-color: var(--action-button-bg); color: var(--action-button-text); }
+
+/* Custom slider track background */
+.v-slider .v-slider__track-container { background-color: var(--slider-track-bg); }
+
+/* Asegurar que los iconos de Material Design se muestren correctamente */
+/* Estilos para texto en tablas en modo oscuro */
+.theme--dark .v-data-table {
+  color: #E1E1E1 !important;
+}
+
+.theme--dark .v-data-table tbody tr {
+  color: #E1E1E1 !important;
+}
+
+.theme--dark .v-data-table tbody td {
+  color: #E1E1E1 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme--dark .v-data-table tbody tr:hover {
+  background-color: #383C4A !important;
+}
+
+/* Asegurar que el texto en celdas sea visible */
+.theme--dark .v-data-table tbody td {
+  color: #E1E1E1 !important;
+}
+
+/* Sobrescribir cualquier estilo inline que pueda estar forzando el color negro */
+.theme--dark [style*="color: black"],
+.theme--dark [style*="color:#000"],
+.theme--dark [style*="color:#000000"] {
+  color: #E1E1E1 !important;
+}
+
+@font-face {
+  font-family: 'Material Design Icons';
+  /* Fonts are copied to the public directory via CopyPlugin. Use
+     an absolute path so webpack does not try to resolve a relative
+     import that does not exist under src/. */
+  src: url('/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+       url('/fonts/materialdesignicons-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.mdi {
+  font-family: 'Material Design Icons' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
+
+/* Asegurar que los iconos en los botones sean visibles */
+.v-btn .v-icon {
+  font-family: 'Material Design Icons' !important;
+  font-size: 20px !important;
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* Asegurar que las flechas de menú sean visibles */
+.v-menu__activator .v-icon {
+  color: inherit !important;
+  opacity: 1 !important;
+  font-size: 20px !important;
+}
+
+/* Asegurar que los iconos en los menús sean visibles */
+.v-list-item__icon .v-icon {
+  color: inherit !important;
+  opacity: 1 !important;
+  font-size: 20px !important;
+}
+
+/* Asegurar que los iconos dentro de los botones se muestren correctamente */
+.v-btn .v-icon {
+  font-family: 'Material Design Icons' !important;
+}
+
+/* Estilos globales para botones */
+.v-btn {
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Botones primarios */
+.v-btn.v-btn--has-bg {
+  background-color: var(--v-primary-base) !important;
+  color: #FFFFFF !important;
+}
+
+/* Botones en modo oscuro */
+.theme--dark .v-btn.v-btn--has-bg:not(.v-btn--text) {
+  background-color: var(--v-primary-base) !important;
+  color: #FFFFFF !important;
+}
+
+/* Botones de texto en modo oscuro */
+.theme--dark .v-btn.v-btn--text {
+  color: #FFFFFF !important;
+  opacity: 0.9 !important;
+}
+
+/* Botones con íconos */
+.v-btn .v-icon {
+  color: inherit !important;
+}
+
+/* Hover y estados activos */
+.v-btn:not(.v-btn--text):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.theme--dark .v-btn:not(.v-btn--text):hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Botones deshabilitados */
+.v-btn--disabled {
+  opacity: 0.5 !important;
+}
+
+/* Reusable rounded card style */
+.rounded-card {
+  border-radius: 12px;
+  background-color: var(--card-bg);
+}
+
+/* Optional rounded style for inputs */
+.rounded-input .v-input__slot,
+.rounded-input input {
+  border-radius: 8px;
+}

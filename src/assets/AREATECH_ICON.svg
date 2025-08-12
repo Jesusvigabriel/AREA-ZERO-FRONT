@@ -1,0 +1,15 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Triángulo externo -->
+  <polygon points="512,64 960,960 64,960" fill="none" stroke="#00D8ED" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Conexión al vértice superior -->
+  <line x1="512" y1="64" x2="512" y2="512" stroke="#00D8ED" stroke-width="64" stroke-linecap="round"/>
+  <!-- Conexión al vértice inferior derecho -->
+  <line x1="512" y1="512" x2="960" y2="960" stroke="#00D8ED" stroke-width="64" stroke-linecap="round"/>
+  <!-- Conexión al vértice inferior izquierdo con punto intermedio -->
+  <line x1="512" y1="512" x2="256" y2="768" stroke="#00D8ED" stroke-width="64" stroke-linecap="round"/>
+  <line x1="256" y1="768" x2="64" y2="960" stroke="#00D8ED" stroke-width="64" stroke-linecap="round"/>
+  <!-- Círculo central -->
+  <circle cx="512" cy="512" r="128" fill="#00D8ED"/>
+  <!-- Círculo intermedio en conexión izquierda -->
+  <circle cx="256" cy="768" r="64" fill="#00D8ED"/>
+</svg>

@@ -1,0 +1,70 @@
+#@pathUrl = http://localhost:8080/apiv3
+@pathUrl = https://apiv3.area54sa.com.ar:8125/apiv3
+
+#@credenciales = Basic A54APIDev A54API4470Dev!
+#@credenciales = Basic A54APIProd A54API4470Prod!
+@credenciales = Basic A54APIProdUniversal A54API4470ProdUniversal!
+
+
+
+### Editar datos de una guia
+PATCH  {{pathUrl}}/guias/editOne/940726
+Authorization: {{credenciales}}
+Content-Type: application/json
+
+{
+    "Chofer": 1,
+    "OrdenEntrega": "",
+    "Remitos": "12121"
+}
+
+
+### Devuelve todas las guias de un periodo de una empresa
+GET {{pathUrl}}/guias/byPeriodoEmpresa/2021-12-01/2021-12-09/165
+Authorization: {{credenciales}}
+
+### Devuelve todas las guias de un periodo
+GET {{pathUrl}}/guias/byPeriodoEmpresa/2022-07-17/2022-07-19
+Authorization: {{credenciales}}
+
+
+
+
+### Obtiene las guías sin rendir de una empresa
+GET {{pathUrl}}/guias/sinRendirPorEmpresa/163
+Authorization: {{credenciales}}
+
+### Registra rendiciones de guias
+POST {{pathUrl}}/guias/registrarRendicion/163/865929|865929
+Authorization: {{credenciales}}
+
+
+
+
+### Calcula la valorizacion de una guia
+GET {{pathUrl}}/guia/calcularValor/55537/EntregaRegularHD
+Authorization: {{credenciales}}
+
+
+### Crear nuevas guías desde órdenes
+POST {{pathUrl}}/guias/newFromOrden/12857
+Authorization: {{credenciales}}
+Content-Type: application/json
+
+{
+    "Calculo":[{"Concepto":"Guia","VariableConfigurada":"M3","ValorConfigurado":"1893.27","MinimoConfigurado":"946.4","ValorBase":0.19598,"Total":946.4},{"Concepto":"Seguro","VariableConfigurada":"%VD","ValorConfigurado":"0.75","MinimoConfigurado":"100","ValorBase":"0.00","Total":100}]
+}
+
+
+### Calcula la valorizacion de una guia
+GET {{pathUrl}}/guia/calcularValor/56028/EntregaRegularHD
+Authorization: {{credenciales}}
+
+
+### Obtiene las guías solo despachadas de una fecha
+GET {{pathUrl}}/guias/byFechaSoloDespachadas/2021-11-09
+Authorization: {{credenciales}}
+
+### Obtiene una guia por ID
+GET {{pathUrl}}/guia/912090
+Authorization: {{credenciales}}

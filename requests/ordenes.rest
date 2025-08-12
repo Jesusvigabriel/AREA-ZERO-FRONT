@@ -1,0 +1,24 @@
+#@pathUrl = http://localhost:8080/apiv3
+@pathUrl = https://apiv3.area54sa.com.ar:8125/apiv3
+
+#@credenciales = Basic A54APIDev A54API4470Dev!
+#@credenciales = Basic A54APIProd A54API4470Prod!
+@credenciales = Basic A54APIProdUniversal A54API4470ProdUniversal!
+
+
+### Devuelve todas las ordenes de un periodo de una empresa
+GET {{pathUrl}}/ordenes/byPeriodoEmpresa/2021-10-01/2021-10-01/163
+Authorization: {{credenciales}}
+
+### Devuelve todas las ordenes de un periodo
+GET {{pathUrl}}/ordenes/byPeriodo/2021-12-01/2021-12-07
+Authorization: {{credenciales}}
+
+
+### Devuelve todas las ordenes en estado de preparación, que no tenga guía asignada y no estén marcada como RetiraCliente
+GET {{pathUrl}}/ordenes/get/preparadasNoGuias
+Authorization: {{credenciales}}
+
+### Registra como que la retira el cliente
+PUT {{pathUrl}}/orden/marcarRetiraCliente/54341
+Authorization: {{credenciales}}

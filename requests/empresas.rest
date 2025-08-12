@@ -1,0 +1,27 @@
+#@pathUrl = http://localhost:8080/apiv3
+@pathUrl = https://apiv3.area54sa.com.ar:8125/apiv3
+
+@credenciales = Basic A54APIDev A54API4470Dev!
+#@credenciales = Basic A54APIProd A54API4470Prod!
+# @credenciales = Basic A54APIProdUniversal A54API4470ProdUniversal!
+
+### Obtiene la configuración de una empresa
+GET {{pathUrl}}/empresa/configuracion/10
+Authorization: {{credenciales}}
+
+### Obtiene una empresa
+GET {{pathUrl}}/empresa/88
+Authorization: {{credenciales}}
+
+
+### Modifica la configuración de una empresa
+PUT {{pathUrl}}/empresa/configuracion/10
+Authorization: {{credenciales}}
+Content-Type: application/json
+
+{
+    "EntregaRegularHDGuia": "Bultos|191|760|true|true",
+    "EntregaRegularHDSeguro": "Bultos|0.75|100|true|true",
+    "EntregaRegularHDPickingCD": "Bultos|0.75|100|true|true",
+    "EntregaRegularHDComplemento": "Bultos|0.75|100|true|true"
+}

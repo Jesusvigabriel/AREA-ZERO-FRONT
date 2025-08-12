@@ -1,0 +1,1695 @@
+<template>
+    <v-container class="pt-0">
+
+        <v-row class="py-3">
+            <v-col cols="12" sm="3" md="3">
+                <SelectorEmpresa @eligioEmpresa="eligioEmpresa($event)" class="pt-2" v-show="empresaLoggeada()<=0"
+                    :idEmpresaInicialmenteSeleccionada="idEmpresa"></SelectorEmpresa>
+            </v-col>
+            <v-col cols="12" sm="3" md="3" class="py-4"><v-text-field prepend-inner-icon="mdi-calendar" type="date" label="Desde" v-model="fechaDesde"
+                    dense></v-text-field></v-col>
+            <v-col cols="12" sm="3" md="3" class="py-4"><v-text-field prepend-inner-icon="mdi-calendar" type="date" label="Hasta" v-model="fechaHasta"
+                    dense></v-text-field></v-col>
+            <v-col cols="12" sm="3" md="3" class="mb-3"><v-btn color="green" @click="clickProcesar" block dark>Procesar</v-btn></v-col>
+        </v-row>
+
+        <v-window v-model="ventanaVisible" v-if="almacenajeDiario.length > 0">
+            <v-window-item :value="1">
+                <v-row class="py-0" v-if="almacenajeDiario.length > 0">
+                    <v-col class="pb-0" >
+                        <v-alert class="mb-0" color="blue" align="center" dark>
+                            <h3>Almacenaje<v-icon>mdi-bookshelf</v-icon></h3>
+                        </v-alert>
+                    </v-col>
+                    <v-col cols="12" sm="4" md="3">
+                        <v-row><v-col><v-btn color="success" block @click="excelCompleto()">Descargar Excel
+                                    <excel-icon style="width: 20px; height: 20px; margin-left: 8px;" /></v-btn></v-col></v-row>
+                        <v-row><v-col v-show="empresaLoggeada() <= 0"><v-btn color="success" block
+                                    @click="emitirFactura()">Emitir
+                                    factura<v-icon>mdi-currency-usd</v-icon></v-btn></v-col></v-row>
+                    </v-col>
+                </v-row>
+                <v-row class="py-0" justify="center">
+                    <v-col cols="4"><v-alert class="mb-0" color="blue" align="center" dark>Total:
+                        <br><b>{{ tipoMoneda }} ${{ importeTotalDiario.toFixed(2) }}-</b></v-alert>
+                    </v-col>
+                    <v-col cols="4"><v-alert class="mb-0" color="blue" align="center" dark>Prepago:
+                        <br><b>{{ tipoMoneda }} ${{ importePrepago.toFixed(2) }}-</b></v-alert>
+                    </v-col>
+                    <v-col cols="4"><v-alert class="mb-0" color="blue" align="center" dark>Seguro:
+                        <br><b>{{ tipoMoneda }} ${{ importeSeguro.toFixed(2) }}-</b></v-alert>
+                    </v-col>
+                    <v-row class="py-0" justify="center">
+
+                        <v-col cols="12" sm="6" md="4"><v-btn color="green" @click="ventanaVisible = 2" block
+                            dark><v-icon>mdi-location-enter</v-icon>Ver In</v-btn>
+                        </v-col>
+                        <v-col cols="12" sm="6" md="4"><v-btn color="green" @click="ventanaVisible = 3" block dark>Ver
+                            Out<v-icon>mdi-location-exit</v-icon></v-btn>
+                        </v-col>
+                    </v-row>
+                </v-row>
+                <v-row>
+                    <v-col class="py-0" v-if="almacenajeDiario.length > 0">
+                        <v-data-table :headers="cabecerasAlmacenajeDiario" :items="almacenajeDiario"
+                            :footer-props="{ itemsPerPageOptions: [5, 30, -1] }" :items-per-page="-1" class="elevation-3">
+                            <template v-slot:item.detalle="{ item }">
+                                <v-chip dark color="blue"
+                                    @click="verDetalleAlmacenaje(item)"><v-icon>mdi-magnify</v-icon></v-chip>
+                                <v-chip dark color="blue"
+                                    @click="verTarifaDiario(item)"><v-icon>mdi-note-text-outline</v-icon></v-chip> 
+                            </template>
+                        </v-data-table>
+                    </v-col>
+                </v-row>
+
+            </v-window-item>
+            <v-window-item :value="2">
+                <v-row class="py-0">
+                    <v-col class="pb-0" cols="12" sm="7" md="9">
+                        <v-alert class="mb-0" color="blue" align="center" dark>
+                            <h3><v-icon>mdi-location-enter</v-icon>In</h3>
+                        </v-alert>
+                    </v-col>
+                    <v-col cols="12" sm="5" md="3">
+                        <v-row><v-col><v-btn color="success" block @click="excelCompleto()">Descargar Excel
+                                    <excel-icon style="width: 20px; height: 20px; margin-left: 8px;" /></v-btn></v-col></v-row>
+                        <v-row><v-col><v-btn color="success" block @click="emitirFactura()">Emitir
+                                    factura<v-icon>mdi-currency-usd</v-icon></v-btn></v-col></v-row>
+                    </v-col>
+                </v-row>
+                <v-row class="py-0" justify="end">
+                    <v-col cols="12" sm="6" md="4"><v-alert class="mb-0" color="blue" align="center" dark>Total:
+                            <b>{{ tipoMoneda }} ${{ importeTotalIn.toFixed(2) }}-</b></v-alert></v-col>
+                    <v-col cols="12" sm="6" md="3"><v-btn color="green" @click="ventanaVisible = 1" block dark>Ver
+                            Almacenaje<v-icon>mdi-bookshelf</v-icon></v-btn></v-col>
+                    <v-col cols="12" sm="6" md="3"><v-btn color="green" @click="ventanaVisible = 3" block dark>Ver
+                            Out<v-icon>mdi-location-exit</v-icon></v-btn></v-col>
+                </v-row>
+                <v-row>
+                    <v-col class="py-0" v-if="inDiario.length > 0">
+                        <v-data-table :headers="cabecerasInDiario" :items="inDiario"
+                            :footer-props="{ itemsPerPageOptions: [5, 30, -1] }" :items-per-page="-1" class="elevation-3">
+                            <template v-slot:item.acciones="{ item }">
+                                <v-chip dark color="blue"
+                                    @click="verDetalleMovimiento(item)"><v-icon>mdi-magnify</v-icon></v-chip>
+                              <v-chip dark color="blue"
+                                    @click="verTarifaIn(item)"><v-icon>mdi-note-text-outline</v-icon></v-chip>    
+                            </template>
+                        </v-data-table>
+                    </v-col>
+                </v-row>
+            </v-window-item>
+            <v-window-item :value="3">
+                <v-row class="py-0">
+                    <v-col class="pb-0">
+                        <v-alert class="mb-0" color="blue" align="center" dark>
+                            <h3>Out<v-icon>mdi-location-exit</v-icon></h3>
+                        </v-alert>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3">
+                        <v-row><v-col><v-btn color="success" block @click="excelCompleto()">Descargar Excel
+                                    <excel-icon style="width: 20px; height: 20px; margin-left: 8px;" /></v-btn></v-col></v-row>
+                        <v-row><v-col><v-btn color="success" block @click="emitirFactura()">Emitir
+                                    factura<v-icon>mdi-currency-usd</v-icon></v-btn></v-col></v-row>
+                    </v-col>
+                </v-row>
+                <v-row class="py-0" justify="end">
+                    <v-col cols="12" sm="6" md="4"><v-alert class="mb-0" color="blue" align="center" dark>Total:
+                            <b>{{ tipoMoneda }} ${{ importeTotalOut.toFixed(2) }}-</b></v-alert></v-col>
+                    <v-col cols="12" sm="6" md="3"><v-btn color="green" @click="ventanaVisible = 1" block dark>Ver
+                            Almacenaje<v-icon>mdi-bookshelf</v-icon></v-btn></v-col>
+                    <v-col cols="12" sm="6" md="3"><v-btn color="green" @click="ventanaVisible = 2" block
+                            dark><v-icon>mdi-location-enter</v-icon>Ver In</v-btn></v-col>
+                </v-row>
+                <v-row>
+                    <v-col class="py-0" v-if="outDiario.length > 0">
+                        <v-data-table :headers="cabecerasOutDiario" :items="outDiario"
+                            :footer-props="{ itemsPerPageOptions: [5, 30, -1] }" :items-per-page="-1" class="elevation-3">
+                            <template v-slot:item.acciones="{ item }">
+                                <v-chip dark color="blue" 
+                                    @click="verDetalleMovimiento(item)"><v-icon>mdi-magnify</v-icon></v-chip>
+                                <v-chip dark color="blue"
+                                    @click="verTarifaOut(item)"><v-icon>mdi-note-text-outline</v-icon>
+                                </v-chip>
+                            </template>
+                        </v-data-table>
+                    </v-col>
+                </v-row>
+            </v-window-item>
+        </v-window>
+        <v-dialog
+            v-model="mostrarListaArticulos"
+            persistent
+        >
+            <v-card v-show="detalleIn">
+                    <v-card-title>
+                        <span class="text-h5">{{nombreOrden}}</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container>
+                            <v-row >
+                                <v-col class="py-0" >
+                                    <v-data-table
+                                        :headers="cabecerasDetalleOrden" 
+                                        :items="listaArticulosOrden"  
+                                        item-key="Barcode"
+                                        :singleSelect=false
+                                        show-select   
+                                        v-model="listaArticulosSeleccionados"
+                                        :footer-props="{itemsPerPageOptions:[10,30,100,-1]}"   
+                                        :items-per-page="30" 
+                                        class="elevation-3" >
+                                    </v-data-table>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn  @click="imprimirStickers()" color="success" >Descargar Stickers</v-btn>
+                        <v-btn  @click="DetalleMovimientoExportarAPDF()" color="success" >Exportar a PDF</v-btn>
+                        <v-btn  @click="DetalleMovimientoExportarAExcel()" color="success" >Exportar a EXCEL</v-btn>
+                        <v-btn color="blue darken-1" text @click="mostrarListaArticulos=false; textoBusqueda=''; productosLote=false; productoSeleccionado=[]">Cerrar</v-btn>
+                    </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+    </v-container>
+</template>
+
+
+<script>
+
+import store from '../../store'
+import SelectorEmpresa from '../../components/SelectorEmpresa.vue'
+import empresas from '../../store/empresasV3'
+import { mapState } from 'vuex';
+import fechas from 'vue-lsi-util/fechas';
+import { ExcelIcon } from '@/components/icons';
+import facturacion from '../../store/facturacion'
+import cadenas from 'vue-lsi-util/cadenas'
+import productosV3 from '@/store/productosV3'
+import jspdf from 'jspdf'
+
+import excel from "exceljs"
+import { saveAs } from "file-saver"
+import { nanoid } from 'nanoid'
+
+let margenIzquierdo = 8
+let margenCentral=margenIzquierdo+170
+let margenCodeEmp = 240
+let margenBarcode = 16
+let margenNombre = 75
+let margenUnidades = margenIzquierdo
+let inicioRenglones = 40
+let renglon=0
+let maximoRenglonesHoja=184
+const renglonPieDePagina=196
+let paginaActual=1
+let totalUnidadesPdf = 0
+let inicioSubString =0
+let finSubString=105
+let maxProductCellWidth= 300
+let maximoTamañoPixeles=150
+let cont=0
+export default {
+    name: "Estadisticas",
+
+    components: {
+    SelectorEmpresa,
+    ExcelIcon
+  },
+
+    data() {
+        return {
+            itemAExportarAExcel: null,
+            movimientosAExportarAExcel: null,
+            totalAFacturarExcel: 0,
+            idEmpresa: -1,
+            configuracionEmpresa: {},
+            hashExcel: '',
+            datosEmpresa: {},
+            fechaDesde: '',
+            fechaHasta: '',
+            infoPrevia: {},
+            almacenajeDiario: [],
+            importeTotalDiario: 0,
+            importeTotalIn: 0,
+            importeTotalOut: 0,
+            importeSeguro: 0,
+            importePrepago: 0,
+            inDiario: [],
+            outDiario: [],
+            cabecerasAlmacenajeDiario: [],
+            mostrarListaArticulos: false,
+            detalleIn: false,
+            nombreOrden: '',
+            listaArticulosOrden: [],
+            listaArticulosSeleccionados:[],
+            tipoMoneda: null,
+            cabecerasDetalleOrden: [
+                {text: 'Unidades', value: 'Unidades'},
+                {text: 'Barcode', value: 'Barcode'},
+                {text: 'Nombre', value: 'Nombre'},
+                {text: 'CodeEmpresa', value: 'CodeEmpresa'},
+                {text: 'Fecha', value: 'Fecha'},
+                {text: 'Usuario', value: 'Usuario'},
+            ],
+            cabecerasInDiario: [
+                { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                { text: 'Orden', align: 'end', value: 'orden', sortable: false },
+                { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                { text: '$', align: 'end', value: 'subtotal', sortable: false },
+                { text: '', value: 'acciones' },
+            ],
+            cabecerasOutDiario: [
+                { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                { text: 'Id', align: 'end', value: 'idMovimiento', sortable: false },
+                { text: 'Remito', align: 'end', value: 'orden', sortable: false },
+                { text: 'Valor declarado', align: 'end', value: 'valorDeclarado', sortable: false },
+                { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                { text: '$', align: 'end', value: 'subtotal', sortable: false },
+                { text: '', value: 'acciones' },
+            ],
+            ventanaVisible: 1,
+            configuracionesEmpresa:[]
+        }
+    },
+
+    methods: {
+        empresaLoggeada() {
+            if (!store.state.usuarios.usuarioActual.IdEmpresa) {
+                return -1
+            } else {
+                return store.state.usuarios.usuarioActual.IdEmpresa
+            }
+        },
+        emitirFactura() {
+            let mensaje = "Este proceso enviará una orden de emisión de factura al ERP con los siguientes conceptos:;"
+
+            mensaje += `;Empresa: <b>${this.datosEmpresa.Nombre}</b>`
+            mensaje += `;Período: <b>${this.fechaDesde}</b> al <b>${this.fechaHasta}</b>`
+
+            let totalAFacturar = 0
+
+            if (this.importeTotalDiario !== 0) {
+                mensaje += `;Almacenaje (postpago): <b>${this.tipoMoneda} $${this.importeTotalDiario.toFixed(2)}-</b>`
+                totalAFacturar += this.importeTotalDiario
+            }
+            if (this.importePrepago !== 0) {
+                mensaje += `;Prepago: <b>${this.tipoMoneda} $${this.importePrepago.toFixed(2)}-</b>`
+                totalAFacturar += this.importePrepago
+            }
+            if (this.importeSeguro !== 0) {
+                mensaje += `;Seguro: <b>${this.tipoMoneda} $${this.importeSeguro.toFixed(2)}-</b>`
+                totalAFacturar += this.importeSeguro
+            }
+            if (this.importeTotalIn !== 0) {
+                mensaje += `;Total In: <b>${this.tipoMoneda} $${this.importeTotalIn.toFixed(2)}-</b>`
+                totalAFacturar += this.importeTotalIn
+            }
+            if (this.importeTotalOut !== 0) {
+                mensaje += `;Total Out: <b>${this.tipoMoneda} $${this.importeTotalOut.toFixed(2)}-</b>`
+                totalAFacturar += this.importeTotalOut
+            }
+
+            mensaje += `;;Total: <b>${this.tipoMoneda} $${totalAFacturar.toFixed(2)}-</b>`
+
+            mensaje += ';;Está <u>completamente seguro?</u>'
+
+            const textoPrimario = "Enviar orden de facturacion"
+            const textoSecundario = "Cancelar"
+            const ad = {
+                titulo: 'Confirma la orden de facturación?',
+                mensaje,
+                botonPrimario: textoPrimario,
+                botonSecundario: textoSecundario,
+                callback: ((respuesta) => {
+                    if (respuesta === textoPrimario) {
+                        this.emitirFacturaConfirmado(totalAFacturar)
+                    }
+                })
+            }
+            store.dispatch("alertDialog/mostrar", ad)
+
+
+        },
+
+        async emitirFacturaConfirmado(totalAFacturar) {
+
+            this.hashExcel = nanoid()
+            await this.excelCompleto("S3")
+
+            facturacion.generarNueva(this.idEmpresa, totalAFacturar, this.hashExcel, "A", this.fechaDesde + "|" + this.fechaHasta)
+                .then(response => {
+                    store.dispatch("alertDialog/mostrar",
+                        {
+                            titulo: 'Proceso exitoso 👍',
+                            mensaje: 'El proceso finalizó <b>exitosamente</b>'
+                        }
+                    )
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        },
+
+        obtenerTotalResumen() {
+
+            this.totalAFacturarExcel = 0
+
+            if (this.importeTotalDiario !== 0) {
+                this.totalAFacturarExcel += this.importeTotalDiario
+            }
+            if (this.importePrepago !== 0) {
+                this.totalAFacturarExcel += this.importePrepago
+            }
+            if (this.importeSeguro !== 0) {
+                this.totalAFacturarExcel += this.importeSeguro
+            }
+            if (this.importeTotalIn !== 0) {
+                this.totalAFacturarExcel += this.importeTotalIn
+            }
+            if (this.importeTotalOut !== 0) {
+                this.totalAFacturarExcel += this.importeTotalOut
+            }
+
+        },
+
+
+
+        async excelCompleto(destino = "D") {
+
+            this.obtenerTotalResumen()
+
+            const workbook = new excel.Workbook()
+
+            //Almacenaje
+            const worksheet = workbook.addWorksheet("Almacenaje")
+
+            worksheet.getRow(1).values = [`Empresa: ${this.datosEmpresa.Nombre}`]
+
+            worksheet.getRow(3).values = [`Almacenaje - Período: ${this.fechaDesde} al ${this.fechaHasta} - Seguro: $${Number(this.importeSeguro.toFixed(2))}- Prepago: $${Number(this.importePrepago.toFixed(2))}-`]
+
+            worksheet.columns = [
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+                { width: 15 },
+            ]
+            worksheet.getRow(5).values = ['Fecha','Metros', 'Unidades', 'Acumulado', 'Kilos', 'Acumulado', 'M3', 'Acumulado', 'Importe']
+
+            worksheet.views = [{ state: 'frozen', ySplit: 5 }]
+            worksheet.autoFilter = 'A5:H5'
+
+            let renglon = 5
+
+            this.almacenajeDiario.forEach(e => {
+                renglon++
+                worksheet.getRow(renglon).values = [
+                    e.fecha,
+                    e.metros,
+                    e.unidades,
+                    e.acumuladoUnidades,
+                    e.kilos,
+                    e.acumuladoKilos,
+                    e.m3,
+                    e.acumuladoM3,
+                    e.precioUnidades + e.precioKilos + e.precioM3,
+                ]
+            })
+
+            renglon++
+            const columnasASumar = ["H"]
+            for (const unaColumna of columnasASumar) {
+                const celdaSuma = worksheet.getCell(`${unaColumna}${renglon}`)
+                celdaSuma.value = { formula: `SUM(${unaColumna}1:${unaColumna}${renglon - 1})` }
+                celdaSuma.font = { bold: true }
+
+            }
+
+
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell((cell, colNumber) => {
+                    if (rowNumber === 1 || rowNumber == renglon) {
+                        cell.font = { size: 16, bold: true }
+                    } else if (rowNumber === 3 || rowNumber === 5) {
+                        cell.font = { size: 14, bold: true }
+                    } else {
+                        cell.font = { size: 14 }
+                    }
+                })
+            })
+
+            const conceptos = ["In", "Out"]
+
+            for (const concepto of conceptos) {
+                const worksheet = workbook.addWorksheet(concepto)
+
+                worksheet.getRow(1).values = [`Empresa: ${this.datosEmpresa.Nombre}`]
+
+                worksheet.getRow(3).values = [concepto + ` - Período: ${this.fechaDesde} al ${this.fechaHasta}`]
+
+                let datosAUsar
+                if (concepto === "In") {
+                    worksheet.columns = [
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                    ]
+                    worksheet.getRow(5).values = ['Fecha', 'Orden','Metros', 'Unidades', 'Kilos', 'M3', 'Subtotal']
+                    worksheet.autoFilter = 'A5:F5'
+                    datosAUsar = this.inDiario
+                } else {
+                    worksheet.columns = [
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                        { width: 15 },
+                    ]
+                    worksheet.getRow(5).values = ['Fecha', 'Id', 'Remito', 'Valor Declarado','Metros', 'Unidades', 'Kilos', 'M3', 'Subtotal']
+                    worksheet.autoFilter = 'A5:G5'
+                    datosAUsar = this.outDiario
+                }
+
+                worksheet.views = [{ state: 'frozen', ySplit: 5 }]
+
+                let renglon = 5
+
+                datosAUsar.forEach(e => {
+                    renglon++
+
+                    if (concepto === "In") {
+                        worksheet.getRow(renglon).values = [
+                            e.fecha,
+                            e.orden,
+                            e.metros,
+                            e.unidades,
+                            e.kilos,
+                            e.m3,
+                            e.subtotal
+                        ]
+                    } else {
+                        worksheet.getRow(renglon).values = [
+                            e.fecha,
+                            e.idMovimiento,
+                            e.orden,
+                            e.valorDeclarado,
+                            e.metros,
+                            e.unidades,
+                            e.kilos,
+                            e.m3,
+                            e.subtotal
+                        ]
+
+                    }
+                })
+
+                renglon++
+                let columnasASumar
+
+                if (concepto === "In") {
+                    columnasASumar = ["C", "D", "E", "F","G"]
+                } else {
+                    columnasASumar = ["D", "E", "F", "G", "H","I"]
+                }
+
+                for (const unaColumna of columnasASumar) {
+                    const celdaSuma = worksheet.getCell(`${unaColumna}${renglon}`)
+                    celdaSuma.value = { formula: `SUM(${unaColumna}1:${unaColumna}${renglon - 1})` }
+                    celdaSuma.font = { bold: true }
+
+                }
+
+                worksheet.eachRow((row, rowNumber) => {
+                    row.eachCell((cell, colNumber) => {
+                        if (rowNumber === 1 || rowNumber == renglon) {
+                            cell.font = { size: 16, bold: true }
+                        } else if (rowNumber === 3 || rowNumber === 5) {
+                            cell.font = { size: 14, bold: true }
+                        } else {
+                            cell.font = { size: 14 }
+                        }
+                    })
+                })
+
+            }
+
+            const worksheet4 = workbook.addWorksheet("Resumen")
+
+            const cabecerasResumen2 = [
+                { header: "CONCEPTOS:", width: 28 },
+                { header: "TOTALES:", width: 35 },
+                { header: "MONEDA:", width: 35 },
+            ]
+
+            worksheet4.columns = [...cabecerasResumen2]
+
+            const filaderesumen2 = [
+                "in:",
+                `$ ${this.importeTotalIn}`,
+                this.tipoMoneda
+            ]
+            worksheet4.getRow("3").values = [...filaderesumen2]
+
+            const filaderesumen3 = [
+                "Prepago:",
+                `$ ${this.importePrepago}`,
+                this.tipoMoneda
+            ]
+            worksheet4.getRow("4").values = [...filaderesumen3]
+
+            const filaderesumen4 = [
+                "Seguro:",
+                `$ ${this.importeSeguro}`,
+                this.tipoMoneda
+            ]
+            worksheet4.getRow("5").values = [...filaderesumen4]
+
+            const filaderesumen5 = [
+                "Out:",
+                `$ ${this.importeTotalOut}`,
+                this.tipoMoneda
+            ]
+            worksheet4.getRow("6").values = [...filaderesumen5]
+
+            const filaderesumen6 = [
+                "Subtotal:",
+                `$ ${this.totalAFacturarExcel}`,//almacenaje
+                this.tipoMoneda
+            ]
+            worksheet4.getRow("7").values = [...filaderesumen6]
+
+            worksheet4.eachRow((row, rowNumber) => {
+                row.eachCell((cell, colNumber) => {
+                    if (rowNumber == 1) {
+                        cell.font = { size: 16, bold: true }
+                    } else {
+                        if (rowNumber == renglon) {
+                            cell.font = { size: 16, bold: true }
+                        } else {
+                            cell.font = { size: 14 }
+                        }
+                    }
+                })
+            })
+
+            const buf = await workbook.xlsx.writeBuffer()
+
+            if (destino === "D") {
+                // saveAs(new Blob([buf]), `${this.datosEmpresa.Nombre}_Almacenaje_desde_${this.fechaDesde}-al-${this.fechaHasta}.xlsx`)
+                saveAs(new Blob([buf]), `${cadenas.stringToSlug(this.datosEmpresa.Nombre)}_Almacenaje_desde_${this.fechaDesde}-al-${this.fechaHasta}.xlsx`)
+            } else {
+                this.subirExcelAS3(buf)
+            }
+
+        },
+
+        subirExcelAS3(excelASubir) {
+            var AWS = require('aws-sdk');
+            const credentials = new AWS.Credentials('AKIA4UL5BS455UXSIPRO', '1reT5pqpYsi/3RmM2Zf++d8NHofWWTW6Q+zUjKQp')
+            var s3 = new AWS.S3({ credentials })
+
+            // const nombreArchivo=`almacenaje-${this.fechaDesde}-al-${this.fechaHasta}-${this.hashExcel}.xlsx`
+            const nombreArchivo = `informe-${this.hashExcel}.xlsx`
+
+            var params = { Bucket: "a54-informes-facturacion", Key: nombreArchivo, Body: excelASubir, ContentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+            this.mostrarLoading("Subiendo informe a S3...")
+            s3.putObject(params, (err, data) => {
+                this.ocultarLoading()
+                if (err) {
+                    this.mostrarError(err)
+                }
+            })
+        },
+
+
+        async verDetalleAlmacenaje(item) {
+            let mensaje = `<h3>Movimientos del ${item.fecha}</h3>`
+
+            const movimientos = ["Ingresos", "Egresos"]
+            for (const movimiento of movimientos) {
+                let detalleMovimientos
+                if (movimiento === "Ingresos") {
+                    detalleMovimientos = await empresas.getIn(this.idEmpresa, item.fecha, item.fecha, "Obteniendo ingresos del " + item.fecha)
+                } else {
+                    detalleMovimientos = await empresas.getOut(this.idEmpresa, item.fecha, item.fecha, "Obteniendo egresos del " + item.fecha)
+                }
+
+                mensaje += `<h4>${movimiento}</h4>`
+                if (detalleMovimientos[0].Detalle.length > 0) {
+                    mensaje += '<table border="0" width="50%"><tr><td><b>Artículo</b><td align="end"><b>Unidades</b><td align="end"><b>Kilos</b><td align="end"><b>M3</b></tr>'
+
+                    let totalUnidades = 0, totalKilos = 0, totalM3 = 0
+                    for (const unItem of detalleMovimientos[0].Detalle) {
+                        mensaje += "<tr>"
+                        mensaje += `<td>${unItem.idArticulo}</td>`
+                        mensaje += `<td align="end">${unItem.Unidades}</td>`
+                        mensaje += `<td align="end">${unItem.Kilos}</td>`
+                        mensaje += `<td align="end">${unItem.M3}</td>`
+                        mensaje += "</tr>"
+                        totalUnidades += unItem.Unidades
+                        totalKilos += unItem.Kilos
+                        totalM3 += unItem.M3
+                    }
+                    mensaje += "<tr>"
+                    mensaje += `<td align="end"><b>Total</b></td>`
+                    mensaje += `<td align="end"><b>${totalUnidades}</b></td>`
+                    mensaje += `<td align="end"><b>${totalKilos.toFixed(2)}</b></td>`
+                    mensaje += `<td align="end"><b>${totalM3.toFixed(2)}</b></td>`
+                    mensaje += "</tr>"
+                    mensaje += "</table>"
+                } else {
+                    mensaje += "<h6>Sin movimientos</h6>"
+                }
+
+            }
+            store.dispatch("alertDialog/mostrar", { mensaje })
+
+        },
+
+        verTarifaDiario(item){
+                let fechaMov = new Date()
+                let fechaTarifa = new Date()
+                let mensaje = ""
+
+                mensaje += '<table  width="100%">'
+                mensaje += '<tr>'
+                mensaje += '<td><b>Unidad</b></td>'
+                mensaje += '<td><b>Valor Diario</b></td>'
+                mensaje += '<td><b>Minimo Diario</b></td>'
+                mensaje += '<td><b>Fecha Tarifa</b></td>'
+                mensaje += '<td><b>Fecha Dia</b></td></tr>'
+
+
+
+                for (const config of this.configuracionesEmpresa) {
+                    fechaMov = new Date(item.fecha + ' 23:59:59')
+                    fechaTarifa = new Date(config.Fecha)
+
+                    if (fechaMov >= fechaTarifa) {
+                        let tarifaDiario = config.AlmacenPostpago
+                        if (tarifaDiario.split("|")[3] === "true") {
+                            mensaje += "<tr>"
+                            mensaje += `<td>${tarifaDiario.split("|")[0]}</td>`
+                            mensaje += `<td>${Number(tarifaDiario.split("|")[1])}</td>`
+                            mensaje += `<td>${Number(tarifaDiario.split("|")[2])}</td>`
+                            mensaje += `<td>${fechas.dateToString(fechaTarifa)}</td>`
+                            mensaje += `<td>${fechas.dateToString(fechaMov)}</td>`
+                            mensaje += "</tr>"
+                            
+                        }
+                        break
+                    }
+                }
+
+                mensaje += "</table>"
+
+                const textoPrimario = "Aceptar"
+
+                const ad = {
+                    titulo: `Tarifa Diario Utilizada`,
+                    mensaje,
+                    botonPrimario: textoPrimario,
+                    // botonTerciario: textoTerciario,
+                    callback: ((respuesta) => {
+                        if (respuesta == textoPrimario) {
+
+                        }
+                    })
+                }
+                store.dispatch("alertDialog/mostrar", ad)
+        },
+
+        verTarifaIn(item) {
+
+               
+
+                let fechaMov = new Date()
+                let fechaTarifa = new Date()
+                let mensaje = ""
+
+                mensaje += '<table  width="100%">'
+                mensaje += '<tr>'
+                mensaje += '<td><b>Unidad</b></td>'
+                mensaje += '<td><b>Valor In</b></td>'
+                mensaje += '<td><b>Minimo In</b></td>'
+                mensaje += '<td><b>Fecha Tarifa</b></td>'
+                mensaje += '<td><b>Fecha In</b></td></tr>'
+
+
+
+                for (const config of this.configuracionesEmpresa) {
+                    fechaMov = new Date(item.fecha + ' 23:59:59')
+                    fechaTarifa = new Date(config.Fecha)
+
+                    if (fechaMov >= fechaTarifa) {
+                        let tarifaIn = config.AlmacenIngresoIn
+                        if (tarifaIn.split("|")[3] === "true") {
+                            mensaje += "<tr>"
+                            mensaje += `<td>${tarifaIn.split("|")[0]}</td>`
+                            mensaje += `<td>${Number(tarifaIn.split("|")[1])}</td>`
+                            mensaje += `<td>${Number(tarifaIn.split("|")[2])}</td>`
+                            mensaje += `<td>${fechas.dateToString(fechaTarifa)}</td>`
+                            mensaje += `<td>${fechas.dateToString(fechaMov)}</td>`
+                            mensaje += "</tr>"
+                            
+                        }
+                        break
+                    }
+                }
+
+                mensaje += "</table>"
+
+                const textoPrimario = "Aceptar"
+
+                const ad = {
+                    titulo: `Tarifa In Utilizada`,
+                    mensaje,
+                    botonPrimario: textoPrimario,
+                    // botonTerciario: textoTerciario,
+                    callback: ((respuesta) => {
+                        if (respuesta == textoPrimario) {
+
+                        }
+                    })
+                }
+                store.dispatch("alertDialog/mostrar", ad)
+
+
+                },
+
+        verTarifaOut(item) {
+
+
+            let fechaMov = new Date()
+            let fechaTarifa = new Date()
+            let mensaje = ""
+
+            mensaje += '<table  width="100%">'
+            mensaje += '<tr>'
+            mensaje += '<td><b>Unidad</b></td>'
+            mensaje += '<td><b>Valor Out</b></td>'
+            mensaje += '<td><b>Minimo Out</b></td>'
+            mensaje += '<td><b>Fecha Tarifa</b></td>'
+            mensaje += '<td><b>Fecha Out</b></td></tr>'
+
+         
+
+            for (const config of this.configuracionesEmpresa) {
+                 fechaMov = new Date(item.fecha + ' 23:59:59')
+                 fechaTarifa = new Date(config.Fecha)
+
+                if (fechaMov >= fechaTarifa) {
+                    let tarifaOut = config.AlmacenEgresoOut
+                    if (tarifaOut.split("|")[3] === "true") {
+                        mensaje += "<tr>"
+                        mensaje += `<td>${tarifaOut.split("|")[0]}</td>`
+                        mensaje += `<td>${Number(tarifaOut.split("|")[1])}</td>`
+                        mensaje += `<td>${Number(tarifaOut.split("|")[2])}</td>`
+                        mensaje += `<td>${fechas.dateToString(fechaTarifa)}</td>`
+                        mensaje += `<td>${fechas.dateToString(fechaMov)}</td>`
+                        mensaje += "</tr>"
+                        
+                    }
+                    break
+                }
+            }
+
+            mensaje += "</table>"
+
+           
+
+
+            const textoPrimario = "Aceptar"
+    
+            const ad = {
+                titulo: `Tarifa Out Utilizada`,
+                mensaje,
+                botonPrimario: textoPrimario,
+                // botonTerciario: textoTerciario,
+                callback: ((respuesta) => {
+                    if (respuesta == textoPrimario) {
+
+                    }
+                })
+            }
+            store.dispatch("alertDialog/mostrar", ad)
+
+
+        },
+        async imprimirStickers(){
+            this.listaArticulosSeleccionados.forEach(barcode =>{
+                productosV3.imprimirSticker(barcode)
+            })
+            this.mostrarListaArticulos=false
+        },
+        async verDetalleMovimiento(item) {
+            this.listaArticulosSeleccionados = []
+            this.listaArticulosOrden=[]
+            this.detalleIn=true
+            this.nombreOrden="Detalle del remito " + item.orden
+            try {
+                const results = await empresas.getMovimientosPorEmpresaYOrden(this.idEmpresa, encodeURIComponent(item.orden))
+
+                for (const unItem of results) {
+                    this.listaArticulosOrden.push({
+                        Unidades: unItem.unidades,
+                        Barcode: unItem.barrcode,
+                        Nombre: unItem.nombreProducto,
+                        CodeEmpresa: unItem.codeEmpresa,
+                        Fecha: unItem.fecha.substr(0, 10),
+                        Usuario: unItem.usuario
+                    })
+                }
+                this.mostrarListaArticulos= true
+                this.movimientosAExportarAExcel = results
+                this.itemAExportarAExcel = item
+
+
+            } catch (error) {
+                console.log("Error", error)
+            }
+
+        },
+        async DetalleMovimientoExportarAPDF(){
+            let contadorRenglones = 0
+            let contadorCodeEmp = 0
+            paginaActual=1
+        
+            //marca si el produto es muy largo
+            let productolargo =0
+            const nombreFont="Helvetica"
+            let pdf = new jspdf("l","mm","A4")
+            pdf.setFont(nombreFont)
+            this.GenerarCabeceraPdf(pdf)
+            //indica el final de la cabecera
+            renglon = 40
+            pdf.setFontSize(8)
+            //recorre todos los registros del detalle
+            this.movimientosAExportarAExcel.forEach(e => {
+                renglon+=6
+                //si hay mas renglones de los permitidos genera una pagina nueva
+                if (renglon>maximoRenglonesHoja) {
+                    this.GenerarPiePdf(pdf)
+                    paginaActual++
+                    pdf.addPage()
+                    this.GenerarCabeceraPdf(pdf)
+                    renglon = 46
+                }
+                pdf.text(e.barrcode.toString(), margenBarcode, renglon)
+                pdf.text(e.unidades.toString(), margenUnidades, renglon)
+                const tamañoProducto = e.nombreProducto.toString()
+                const codeEmp = e.codeEmpresa.toString()
+                //si el texto es mas grande que la celda
+                if (pdf.getStringUnitWidth(tamañoProducto) * 6 > maxProductCellWidth){
+                    // El texto es demasiado ancho para la celda, divídelo en fragmentos
+                    const chunks = pdf.splitTextToSize(tamañoProducto, maximoTamañoPixeles);
+                    contadorRenglones=0
+                    chunks.forEach(chunk => {
+                        //el contador verifica que no sea la primera vez que ingresa
+                        if(contadorRenglones > 0){
+                            productolargo++
+                            if (renglon>maximoRenglonesHoja) {
+                                this.GenerarPiePdf(pdf)
+                                paginaActual++
+                                pdf.addPage()
+                                this.GenerarCabeceraPdf(pdf)
+                                renglon = 40
+                            }
+                            //suma un renglon mas
+                            renglon += 6
+                            //modifica donde va a cortar el texto para escribir el restante
+                            inicioSubString += 105
+                            finSubString += 105
+                            pdf.text(e.nombreProducto.toString().substring(inicioSubString,finSubString), margenNombre, renglon)
+                        }else{
+                            pdf.text(e.nombreProducto.toString().substring(inicioSubString,finSubString), margenNombre, renglon)
+                        }
+                        contadorRenglones ++
+                    })
+                }else{
+                    //si el nombre esta por debajo del limite 
+                    productolargo = 0
+                    pdf.text(e.nombreProducto.toString(), margenNombre, renglon)
+                }
+                let renglonCode=renglon
+                //si el texto del codeempresa supera el limite de celda
+                if (pdf.getStringUnitWidth(codeEmp)* 6 > 100){
+                    inicioSubString = 0
+                    finSubString = 30
+                    const chunks = pdf.splitTextToSize(codeEmp, 60);
+                    if(productolargo>0){
+                        renglonCode-=6*productolargo
+                    }
+                    contadorCodeEmp=0
+                    chunks.forEach(chunk => {
+                        if(contadorCodeEmp > 0){
+                            if(productolargo==0){
+                                renglon=renglonCode
+                            }
+                            inicioSubString += 30
+                            finSubString += 30
+                            pdf.text(e.codeEmpresa.toString().substring(inicioSubString,finSubString), margenCodeEmp, renglonCode)
+                            renglonCode += 6
+                        }else{
+                            pdf.text(e.codeEmpresa.toString().substring(inicioSubString,finSubString), margenCodeEmp, renglonCode)
+                            renglonCode += 6
+                        }
+                        contadorCodeEmp++
+                    })
+                }else{
+                    if(productolargo>0){
+                        renglonCode-=6*productolargo
+                    }
+                    pdf.text(e.codeEmpresa.toString(), margenCodeEmp, renglonCode)
+                }
+                contadorRenglones=0
+                productolargo=0
+                inicioSubString = 0
+                finSubString = 105
+                pdf.setDrawColor(128,128,128) 
+                pdf.line(margenIzquierdo, renglon+2, margenCentral+115, renglon+2)
+                pdf.setDrawColor(0,0,0)
+                totalUnidadesPdf += e.unidades
+            })
+            this.GenerarPiePdf(pdf)
+            this.GenerarFinPdf(pdf,totalUnidadesPdf)
+            pdf.save("orden_"+this.itemAExportarAExcel.orden+".pdf")
+            totalUnidadesPdf = 0
+        },
+        async GenerarCabeceraPdf(pdf){
+            pdf.setFontSize(10)
+            pdf.setDrawColor(0,0,255)
+            pdf.line(margenIzquierdo, 7, margenCentral+115, 7)
+            const imagen=new Image()
+            imagen.src=require('/src/assets/Logo_Area_Completo.png')
+            pdf.addImage(imagen, "PNG", margenIzquierdo+2, 8, 60, 15)
+            pdf.setDrawColor(0,0,255)
+            pdf.line(margenIzquierdo, 23, margenCentral+115, 23)
+            pdf.setFontSize(15)
+            pdf.text("Empresa:", margenIzquierdo+70, 13)
+            pdf.text(this.datosEmpresa.Nombre, margenIzquierdo+88, 21)
+            pdf.line(72, 7, 72, 23)
+            pdf.line(8, 7, 8, 23)
+            pdf.line(293, 7, 293, 23)
+            pdf.setFontSize(14)
+            pdf.text(this.itemAExportarAExcel.orden, margenIzquierdo, 33)
+            pdf.text("Ingreso del dia: " + this.itemAExportarAExcel.fecha.substr(0, 10), margenIzquierdo+220, 20)
+            pdf.line(margenIzquierdo, 35, margenCentral+115, 35)
+            pdf.setFontSize(9)
+            pdf.text("Un.", margenUnidades, inicioRenglones)
+            pdf.text("Barcode", margenBarcode, inicioRenglones)
+            pdf.text("Nombre", margenNombre, inicioRenglones)
+            pdf.text("CodeEmpresa", margenCodeEmp, inicioRenglones)
+        },
+        async GenerarPiePdf(pdf){
+            let renglonPie=renglonPieDePagina
+            pdf.line(margenIzquierdo, renglonPie, margenCentral+115, renglonPie)
+            renglonPie += 5
+            pdf.text("Página: "+paginaActual, margenIzquierdo, renglonPie)
+        },
+        async GenerarFinPdf(pdf, total){
+            pdf.setFontSize(12)
+            let renglonPie=renglonPieDePagina
+            pdf.text("Total de unidades: "+total, margenIzquierdo, renglonPie-5)
+        },
+        async DetalleMovimientoExportarAExcel() {
+            // console.log(this.movimientosAExportarAExcel)
+
+            const workbook = new excel.Workbook()
+
+            //Almacenaje
+            const worksheet = workbook.addWorksheet("Detalle")
+
+            worksheet.getRow(1).values = [`Empresa: ${this.datosEmpresa.Nombre}`]
+            worksheet.getRow(2).values = [`Detalle del remito ${this.itemAExportarAExcel.orden}`]
+
+            worksheet.columns = [
+                { width: 40 },
+                { width: 40 },
+                { width: 60 },
+                { width: 15 },
+                { width: 20 },
+                { width: 15 },
+            ]
+
+            let renglon = 4
+            worksheet.getRow(renglon).values = ['CodeEmp', 'Barcode', 'Nombre', 'Unidades', 'Fecha', 'Usuario']
+            worksheet.views = [{ state: 'frozen', ySplit: renglon }]
+            worksheet.autoFilter = `A${renglon}:F${renglon}`
+
+
+            this.movimientosAExportarAExcel.forEach(e => {
+                renglon++
+                worksheet.getRow(renglon).values = [
+                    e.codeEmpresa,
+                    e.barrcode,
+                    e.nombreProducto,
+                    e.unidades,
+                    e.fecha.substr(0, 10),
+                    e.usuario,
+                ]
+            })
+
+            renglon++
+            const columnasASumar = ["D"]
+            for (const unaColumna of columnasASumar) {
+                const celdaSuma = worksheet.getCell(`${unaColumna}${renglon}`)
+                celdaSuma.value = { formula: `SUM(${unaColumna}1:${unaColumna}${renglon - 1})` }
+                celdaSuma.font = { bold: true }
+
+            }
+
+
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell((cell, colNumber) => {
+                    if (rowNumber === 1 || rowNumber == renglon) {
+                        cell.font = { size: 16, bold: true }
+                    } else {
+                        cell.font = { size: 14 }
+                    }
+                })
+            })
+
+            const buf = await workbook.xlsx.writeBuffer()
+            saveAs(new Blob([buf]), `Detalle_Remito_${this.itemAExportarAExcel.orden}.xlsx`)
+
+        },
+
+        setCabecerasSegunConfiguracion() {
+            // console.log(this.configuracionEmpresa)
+
+            if (this.configuracionEmpresa.AlmacenSeguro.split("|")[3] === "true") {
+                this.importeSeguro = Number(this.configuracionEmpresa.AlmacenSeguro.split("|")[1])
+            } else {
+                this.importeSeguro = 0
+            }
+
+            if (this.configuracionEmpresa.AlmacenPrepago.split("|")[3] === "true") {
+                this.importePrepago = Number(this.configuracionEmpresa.AlmacenPrepago.split("|")[1])
+            } else {
+                this.importePrepago = 0
+            }
+
+            if (this.configuracionEmpresa.AlmacenPostpago.split("|")[3] === "true") {
+                const configuracionIngresoIn = this.configuracionEmpresa.AlmacenPostpago.split("|")[0]
+                if (configuracionIngresoIn === "M3") {
+                    this.cabecerasAlmacenajeDiario = [
+                        { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                        { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                        { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                        { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                        { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                        { text: 'Acum.', align: 'end', value: 'acumuladoM3', sortable: false },
+                        { text: '$', align: 'end', value: 'precioM3', sortable: false },
+                        { text: '', value: 'detalle', sortable: false },
+                    ]
+                } else if (configuracionIngresoIn === "Kilos") {
+                    this.cabecerasAlmacenajeDiario = [
+                        { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                        { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                        { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                        { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                        { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                        { text: 'Acum.', align: 'end', value: 'acumuladoKilos', sortable: false },
+                        { text: '$', align: 'end', value: 'precioKilos', sortable: false },
+                        { text: '', value: 'detalle', sortable: false },
+                    ]
+                } else if (configuracionIngresoIn === "Unidades") {
+                    this.cabecerasAlmacenajeDiario = [
+                        { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                        { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                        { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                        { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                        { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                        { text: 'Acum.', align: 'end', value: 'acumuladoUnidades', sortable: false },
+                        { text: '$', align: 'end', value: 'precioUnidades', sortable: false },
+                        { text: '', value: 'detalle', sortable: false },
+                    ]
+                }
+            } else {
+                this.cabecerasAlmacenajeDiario = [
+                    { text: 'Fecha', align: 'start', value: 'fecha', sortable: false },
+                    { text: 'Metros', align: 'end', value: 'metros', sortable: false },
+                    { text: 'M3', align: 'end', value: 'm3', sortable: false },
+                    { text: 'Kilos', align: 'end', value: 'kilos', sortable: false },
+                    { text: 'Unidades', align: 'end', value: 'unidades', sortable: false },
+                    { text: '', value: 'detalle', sortable: false },
+                ]
+
+            }
+
+        },
+        estoyEnFuente() {
+            return process.env.NODE_ENV == "development"
+        },
+        async clickProcesar() {
+            // if (process.env.NODE_ENV==="development") {
+            //     this.idEmpresa=57
+            //     let response=await empresas.getConfiguracion(this.idEmpresa)
+            //     this.configuracionEmpresa=response
+
+            //     response=await empresas.getOne(this.idEmpresa)
+            //     this.datosEmpresa=response
+
+            //     this.fechaDesde='2022-12-01'
+            //     this.fechaHasta='2022-12-31'
+            // }
+
+            if (this.idEmpresa > 0) {
+
+                let desdeConfig = fechas.dateToString(fechas.getSumarDiasFecha(-120, new Date(this.fechaDesde)))
+                
+                empresas.getConfiguracionesEmpresa(this.idEmpresa,String(desdeConfig),String(this.fechaHasta+ ' 23:59:59'))
+                .then(response => {
+                     this.configuracionesEmpresa=response
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+               
+                 
+                this.setCabecerasSegunConfiguracion()
+
+                this.almacenajeDiario = []
+                this.inDiario = []
+                this.outDiario = []
+
+                const hastaInformacionPrevia = fechas.dateToString(fechas.getSumarDiasFecha(this.estoyEnFuente() ? -1 : 0, new Date(this.fechaDesde)))
+                 //console.log("Hasta para informacion previa", hastaInformacionPrevia)
+                try {
+
+                    //Obtengo la información previa
+                    //const response = await empresas.getAlmacenaje(this.idEmpresa, '1900-01-01', hastaInformacionPrevia, "Obteniendo información previa")
+                    // Nuevo Codigo Agilidad del Reporte
+                    const response = await empresas.getAlmacenajePrevio(this.idEmpresa, '1900-01-01', hastaInformacionPrevia, "Obteniendo información previa")
+
+                    this.infoPrevia = { unidades: response[0].totaUnidades, totalKilos: response[0].kilos, m3: response[0].totalM3 }
+                    let acumuladoUnidades = response[0].totalUnidades
+                    let acumuladoKilos = response[0].totalKilos
+                    let acumuladoM3 = response[0].totalM3
+                    let fechaIN = new Date()
+                    let fechaOUT = new Date()
+                    let fechaConfig = new Date()
+
+
+                    const desdePeriodoAProcesar = fechas.dateToString(fechas.getSumarDiasFecha(this.estoyEnFuente() ? 0 : 2, new Date(this.fechaDesde)))
+                    const hastaPeriodoAProcesar = fechas.dateToString(fechas.getSumarDiasFecha(this.estoyEnFuente() ? 0 : 2, new Date(this.fechaHasta)))
+
+                    // const fechasAObtener=this.getDaysArray(new Date(this.fechaDesde), new Date(this.fechaHasta))
+                    const fechasAObtener = this.getDaysArray(new Date(desdePeriodoAProcesar), new Date(hastaPeriodoAProcesar))
+                    // console.log("Fechas a Obtener", fechasAObtener)
+                    
+
+                    //Me fijo el costo por cada In
+                    let unidadIn = "", valorIn = 0, minimoIn = 0
+                    let configuracionAProcesar = this.configuracionEmpresa.AlmacenIngresoIn
+                    if (configuracionAProcesar.split("|")[3] === "true") {
+                        unidadIn = configuracionAProcesar.split("|")[0]
+                        valorIn = Number(configuracionAProcesar.split("|")[1])
+                        minimoIn = Number(configuracionAProcesar.split("|")[2])
+                    }
+
+                    // console.log("Configuracion de In", "Unidad", unidadIn, "Valor", valorIn, "Minimo", minimoIn)
+
+                    //Me fijo el costo por cada Out
+                    let unidadOut = "", valorOut = 0, minimoOut = 0
+                    configuracionAProcesar = this.configuracionEmpresa.AlmacenEgresoOut
+                    if (configuracionAProcesar.split("|")[3] === "true") {
+                        unidadOut = configuracionAProcesar.split("|")[0]
+                        valorOut = Number(configuracionAProcesar.split("|")[1])
+                        minimoOut = Number(configuracionAProcesar.split("|")[2])
+                    }
+                    let configuracionAProcesarIN = ""
+                    let configuracionAProcesarOUT = ""
+
+                    //Obtengo todos los In
+                    const detalleIn = await empresas.getIn(this.idEmpresa, this.fechaDesde, this.fechaHasta, "Obteniendo In...")
+                     //console.log("DetalleIn", detalleIn)
+
+                    this.importeTotalIn = 0
+                    for (const unaFecha of detalleIn) {
+
+                        if (unaFecha.Detalle.length > 0) {
+
+                            //aca va el for que busca la configuracion correcta
+                            for (const config of this.configuracionesEmpresa) {
+                                fechaIN = new Date(unaFecha.Fecha + ' 23:59:59')
+                                fechaConfig = new Date(config.Fecha)
+
+                                if (fechaIN >= fechaConfig) {
+                                    configuracionAProcesar = config.AlmacenIngresoIn
+                                    if (configuracionAProcesar.split("|")[3] === "true") {
+                                        unidadIn = configuracionAProcesar.split("|")[0]
+                                        valorIn = Number(configuracionAProcesar.split("|")[1])
+                                        minimoIn = Number(configuracionAProcesar.split("|")[2])
+                                    }
+                                    break
+                                }
+                            }
+
+
+                            let ordenActual = unaFecha.Detalle[0].Orden
+                            let precioUnitario = 0, unidades = 0, kilos = 0, m3 = 0, metros = 0
+
+                            for (const unDetalle of unaFecha.Detalle) {
+
+                                if (unDetalle.Orden === ordenActual) {
+                                    unidades += unDetalle.Unidades
+                                    kilos += unDetalle.Kilos
+                                    m3 += unDetalle.M3
+                                    metros += unDetalle.Metros
+                                    if (unidadIn === "Unidades") {
+                                        precioUnitario += unDetalle.Unidades * valorIn
+                                    } else if (unidadIn === "Kilos") {
+                                        precioUnitario += unDetalle.Kilos * valorIn
+                                    } else if (unidadIn === "M3") {
+                                        precioUnitario += unDetalle.M3 * valorIn
+                                    } else if (unidadIn === "Fijo"){
+                                        precioUnitario =  valorIn 
+                                        
+                                    } else {
+                                        // console.log("UnidadIn desconocida", unidadIn)
+                                    }
+                                } else {
+                                    precioUnitario = Number(precioUnitario.toFixed(2))
+                                    const subtotal = Math.max(precioUnitario, minimoIn)
+                                    this.importeTotalIn += subtotal
+                                    this.inDiario.push(
+                                        {
+                                            fecha: unaFecha.Fecha,
+                                            unidades,
+                                            metros: Number(metros.toFixed(2)),
+                                            kilos: Number(kilos.toFixed(2)),
+                                            m3: Number(m3.toFixed(2)),
+                                            subtotal: Number(subtotal.toFixed(2)),
+                                            orden: ordenActual
+                                        }
+                                    )
+
+                                    ordenActual = unDetalle.Orden
+
+                                    unidades = unDetalle.Unidades
+                                    kilos = unDetalle.Kilos
+                                    m3 = unDetalle.M3
+                                    metros = unDetalle.Metros
+
+                                    if (unidadIn === "Unidades") {
+                                        precioUnitario = unDetalle.Unidades * valorIn
+                                    } else if (unidadIn === "Kilos") {
+                                        precioUnitario = unDetalle.Kilos * valorIn
+                                    } else if (unidadIn === "M3") {
+                                        precioUnitario = unDetalle.M3 * valorIn
+                                    } else if (unidadIn === "Fijo"){
+                                        precioUnitario =  valorIn
+                                        
+                                    }
+                                }
+
+                            }
+
+                            precioUnitario = Number(precioUnitario.toFixed(2))
+                            const subtotal = Math.max(precioUnitario, minimoIn)
+                            this.importeTotalIn += subtotal
+                            this.inDiario.push(
+                                {
+                                    fecha: unaFecha.Fecha,
+                                    unidades,
+                                    metros: Number(metros.toFixed(2)),
+                                    kilos: Number(kilos.toFixed(2)),
+                                    m3: Number(m3.toFixed(2)),
+                                    subtotal: Number(subtotal.toFixed(2)),
+                                    orden: ordenActual
+                                }
+                            )
+                        }
+                    }
+
+
+                    //Obtengo todos los Out
+                    const detalleOut = await empresas.getOut(this.idEmpresa, this.fechaDesde, this.fechaHasta, "Obteniendo Out...")
+                     //console.log("DetalleOut", detalleOut)
+                    // console.log("Configuracion de Out", "Unidad", unidadOut, "Valor", valorOut, "Minimo", minimoOut)
+
+                    this.importeTotalOut = 0
+                    for (const unaFecha of detalleOut) {
+
+                        if (unaFecha.Detalle.length > 0) {
+
+                            let ordenActual = unaFecha.Detalle[0].Orden
+                            let idMovimientoActual = unaFecha.Detalle[0].idMovimiento
+                            let valorDeclaradoActual = unaFecha.Detalle[0].ValorDeclarado
+                            let precioUnitario = 0, unidades = 0, kilos = 0, m3 = 0, metros = 0
+
+                            for (const config of this.configuracionesEmpresa) {
+                                fechaOUT = new Date(unaFecha.Fecha + ' 23:59:59')
+                                fechaConfig = new Date(config.Fecha)
+
+                                if (fechaOUT >= fechaConfig) {
+                                    //console.log("Fecha Out: " +fechaOUT )
+                                    //console.log("Fecha Config: " +fechaConfig )
+                                    configuracionAProcesarOUT = config.AlmacenEgresoOut
+
+                                    if (configuracionAProcesarOUT.split("|")[3] === "true") {
+
+                                        unidadOut = configuracionAProcesarOUT.split("|")[0]
+                                        valorOut = Number(configuracionAProcesarOUT.split("|")[1])
+                                        minimoOut = Number(configuracionAProcesarOUT.split("|")[2])
+                                    }
+                                    break
+                                }
+                            }
+
+                            if (unidadOut === "%VD") {
+                                precioUnitario = valorDeclaradoActual * valorOut / 100
+                            }
+
+                            const ordenEnEstudio = "3128"
+                            for (const unDetalle of unaFecha.Detalle) {
+
+                                if (ordenActual === ordenEnEstudio) {
+                                    // console.log("UnDetalle", unDetalle)
+                                }
+
+
+                                if (unDetalle.Orden === ordenActual) {
+                                    unidades += unDetalle.Unidades
+                                    kilos += unDetalle.Kilos
+                                    m3 += unDetalle.M3
+                                    metros += unDetalle.Metros
+                                    if (unidadOut === "Unidades") {
+                                        precioUnitario += unDetalle.Unidades * valorOut
+                                    } else if (unidadOut === "Kilos") {
+                                        precioUnitario += unDetalle.Kilos * valorOut
+                                    } else if (unidadOut === "M3") {
+                                        precioUnitario += unDetalle.M3 * valorOut
+                                    } else if (unidadOut === "%VD") {
+                                        //No se acumula, porque se le calculó la primera vez
+                                        // precioUnitario += unDetalle.ValorDeclarado * valorOut / 100
+                                    }else if (unidadOut === "Fijo"){
+                                        precioUnitario =  valorOut
+                                    }
+
+                                    if (ordenActual === ordenEnEstudio) {
+                                        // console.log("En la actual", precioUnitario)
+                                    }
+
+
+                                } else {
+
+
+                                    if (ordenActual === ordenEnEstudio) {
+                                        // console.log("Empezar al terminar la actual", precioUnitario)
+                                    }
+
+                                    precioUnitario = Number(precioUnitario.toFixed(2))
+                                    const subtotal = Math.max(precioUnitario, minimoOut)
+                                    this.importeTotalOut += subtotal
+
+                                    this.outDiario.push(
+                                        {
+                                            fecha: unaFecha.Fecha,
+                                            unidades,
+                                            metros: Number(metros.toFixed(2)),
+                                            kilos: Number(kilos.toFixed(2)),
+                                            m3: Number(m3.toFixed(2)),
+                                            subtotal: Number(subtotal.toFixed(2)),
+                                            orden: ordenActual,
+                                            idMovimiento: idMovimientoActual,
+                                            valorDeclarado: valorDeclaradoActual,
+                                        }
+                                    )
+
+
+                                    ordenActual = unDetalle.Orden
+                                    idMovimientoActual = unDetalle.idMovimiento
+                                    valorDeclaradoActual = unDetalle.ValorDeclarado
+
+                                    unidades = unDetalle.Unidades
+                                    kilos = unDetalle.Kilos
+                                    m3 = unDetalle.M3
+                                    metros = unDetalle.Metros
+
+                                    if (ordenActual === ordenEnEstudio) {
+                                        //console.log("Arranco", unidadOut)
+                                    }
+
+                                    if (unidadOut === "Unidades") {
+                                        precioUnitario = unDetalle.Unidades * valorOut
+                                    } else if (unidadOut === "Kilos") {
+                                        precioUnitario = unDetalle.Kilos * valorOut
+                                    } else if (unidadOut === "M3") {
+                                        precioUnitario = unDetalle.M3 * valorOut
+                                    } else if (unidadOut === "%VD") {
+                                        precioUnitario = unDetalle.ValorDeclarado * valorOut / 100
+                                    } else if (unidadOut === "Fijo"){
+                                        precioUnitario =  valorOut
+                                    }
+                            
+
+                                    if (ordenActual === ordenEnEstudio) {
+                                       // console.log("Empezar la nueva", precioUnitario)
+                                    }
+
+
+
+                                }
+
+
+                            }
+
+                            precioUnitario = Number(precioUnitario.toFixed(2))
+                            const subtotal = Math.max(precioUnitario, minimoOut)
+                            this.importeTotalOut += subtotal
+                            this.outDiario.push(
+                                {
+                                    fecha: unaFecha.Fecha,
+                                    unidades,
+                                    metros: Number(metros.toFixed(2)),
+                                    kilos: Number(kilos.toFixed(2)),
+                                    m3: Number(m3.toFixed(2)),
+                                    subtotal: Number(subtotal.toFixed(2)),
+                                    orden: ordenActual,
+                                    idMovimiento: idMovimientoActual,
+                                    valorDeclarado: valorDeclaradoActual,
+                                }
+                            )
+                        }
+                    }
+
+                    // Nuevo Codigo Agilidad del Reporte
+                    let almacenaje = await empresas.getAlmacenaje(this.idEmpresa, this.fechaDesde, this.fechaHasta)
+                    //Obtengo dia por dia
+                    this.importeTotalDiario = 0
+                    for (const fechaActual of fechasAObtener) {
+
+                        // const response = await empresas.getAlmacenaje(this.idEmpresa, fechas.dateToString(fechaActual), fechas.dateToString(fechaActual), "Obteniendo " + fechas.dateToString(fechaActual))
+                        // console.log("Almacenaje del ", fechas.dateToString(fechaActual), response[0])
+
+                         //acumuladoUnidades += 0
+                         //acumuladoM3 += 0
+                         //acumuladoKilos += 0
+
+                         // Nuevo Codigo Agilidad del Reporte
+                        let unidades = 0
+                        let kilos = 0
+                        let m3 = 0
+                        let metros = 0
+
+                        for (const valorAlmacen of almacenaje){
+                           
+                            if(new Date(fechaActual).toDateString()==new Date(valorAlmacen.Fecha).toDateString()){
+                                acumuladoUnidades += valorAlmacen.totalUnidades
+                                acumuladoM3 += valorAlmacen.totalM3
+                                acumuladoKilos += valorAlmacen.totalKilos
+                                unidades += valorAlmacen.totalUnidades
+                                kilos += valorAlmacen.totalKilos
+                                m3 += valorAlmacen.totalM3
+                                metros += valorAlmacen.totalMetros
+                               
+                            }
+                        }
+                        // Nuevo Codigo Agilidad del Reporte
+
+
+                        let precioUnidades = 0
+                        let precioKilos = 0
+                        let precioM3 = 0
+                        let fechaAlmacenaje = new Date()
+                        let configuracionAlmacenPostpago = ""
+
+                        // Nuevo codigo de obtencion de configuraciones.
+                        for (const config of this.configuracionesEmpresa) {
+
+                            fechaAlmacenaje = new Date(fechaActual)
+
+                            fechaConfig = new Date(config.Fecha)
+
+                            if (fechaAlmacenaje >= fechaConfig) {
+
+                                configuracionAlmacenPostpago = config.AlmacenPostpago
+                                //console.log(configuracionAlmacenPostpago)
+
+                                break
+                            }
+                        }
+
+                        const activo = configuracionAlmacenPostpago.split("|")[3]
+                        if (activo === "true") {
+                            const unidad = configuracionAlmacenPostpago.split("|")[0]
+                            const valor = Number(configuracionAlmacenPostpago.split("|")[1])
+
+                            if (unidad === "M3") {
+                                precioM3 = Number((valor * acumuladoM3).toFixed(2))
+                                this.importeTotalDiario += precioM3
+                            }
+                            if (unidad === "Kilos") {
+                                precioKilos = Number((valor * acumuladoKilos).toFixed(2))
+                                this.importeTotalDiario += precioKilos
+                            }
+                            if (unidad === "Unidades") {
+                                precioUnidades = Number((valor * acumuladoUnidades).toFixed(2))
+                                this.importeTotalDiario += precioUnidades
+                            }
+                            if (unidad === "Fijo") {
+                                this.importeTotalDiario = valor
+                            }
+                            
+                        }
+
+                        
+
+                        this.almacenajeDiario.push(
+                            {
+                                fecha: fechas.dateToString(fechaActual),
+                                metros: Number(metros.toFixed(2)),
+                                unidades: unidades,
+                                kilos: Number(kilos.toFixed(2)),
+                                m3: Number(m3.toFixed(2)),
+                                acumuladoUnidades,
+                                acumuladoKilos: Number(acumuladoKilos.toFixed(2)),
+                                acumuladoM3: Number(acumuladoM3.toFixed(2)),
+                                precioUnidades,
+                                precioKilos,
+                                precioM3
+                            }
+                        )
+
+                        // this.unidadesDiarias.push({fecha: fechas.dateToString(fechaActual), unidades: response.unidades, acumulado: acumuladoUnidades, precio: precioUnidades})
+                        // this.kilosDiarios.push({fecha: fechas.dateToString(fechaActual), kilos: Number(response.kilos).toFixed(3), acumulado: Number(acumuladoKilos).toFixed(2), precio: precioKilos})
+                        // this.m3Diarios.push({fecha: fechas.dateToString(fechaActual), m3: Number(response.m3).toFixed(2), acumulado: Number(acumuladoM3).toFixed(2), precio: precioM3})
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
+                }
+            } else {
+                this.mostrarError("Debe seleccionar empresa")
+            }
+        },
+
+        getDaysArray(s, e) { for (var a = [], d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) { a.push(new Date(d)); } return a; },
+
+
+        eligioEmpresa(idEmpresaElegida) {
+            this.idEmpresa = idEmpresaElegida
+
+            this.almacenajeDiario = []
+            this.inDiario = []
+            this.outDiario = []
+
+            empresas.getConfiguracion(idEmpresaElegida)
+                .then(response => {
+                    // console.log(response)
+                    this.configuracionEmpresa = response
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+
+            empresas.getOne(idEmpresaElegida)
+                .then(response => {
+                    this.tipoMoneda = response.TipoMoneda
+                    this.datosEmpresa = response
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        },
+
+        setearFechaInicialDesde() {
+            const fechaHoy = new Date()
+            let anioHoy=fechaHoy.getFullYear()
+            let mesHoy=fechaHoy.getMonth()+1
+            mesHoy--
+            if (mesHoy === 0) {
+                mesHoy = 12
+                anioHoy--
+            }
+            const diaHoy = 1
+
+            const devolver = anioHoy + "-" + (mesHoy < 10 ? "0" : "") + mesHoy + "-" + (diaHoy < 10 ? "0" : "") + diaHoy
+
+            this.fechaDesde = devolver
+
+            if (process.env.NODE_ENV === "development") {
+                this.fechaDesde = "2023-06-01"
+            }
+
+        },
+        setearFechaInicialHasta() {
+            this.fechaHasta = fechas.getHoy()
+
+            if (process.env.NODE_ENV === "development") {
+                this.fechaHasta = "2023-06-02"
+            }
+        },
+
+        mostrarError(payload) {
+            store.dispatch("snackbar/mostrar", payload)
+        },
+        mostrarLoading(texto) {
+            store.dispatch("loading/mostrar", texto)
+        },
+        ocultarLoading() {
+            store.dispatch("loading/ocultar")
+        },
+
+    },
+
+    created() {
+        store.dispatch('actualizarTituloPrincipal', 'Informe de almacenaje')
+        store.dispatch('empresas/cargarListaEmpresas','SoloActivas')
+        this.setearFechaInicialDesde()
+        this.setearFechaInicialHasta()
+
+        if (store.state.usuarios.usuarioActual.IdEmpresa > 0) {
+            this.idEmpresa = store.state.usuarios.usuarioActual.IdEmpresa
+            this.eligioEmpresa(store.state.usuarios.usuarioActual.IdEmpresa)
+        }
+
+
+    },
+}
+
+</script>
