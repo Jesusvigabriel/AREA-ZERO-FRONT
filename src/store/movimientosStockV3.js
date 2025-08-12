@@ -95,9 +95,9 @@ const movimientosStockV3 ={
      * Crea un movimiento de stock por partida
      * 
      * CONTRATO:
-     * - Retorna: response.data (objeto con status, mensaje, data)
-     * - Éxito: response.data.status === "SUCCESS" → resolve(response.data)
-     * - Error: response.data.status === "ERROR" → reject con mensaje de negocio
+     * - Retorna: response (objeto con status, mensaje, data)
+     * - Éxito: response.status === "SUCCESS" → resolve(response)
+     * - Error: response.status === "ERROR" → reject con mensaje de negocio
      * - Error HTTP: problemas de red/servidor → reject con error técnico
      * 
      * ESTRUCTURA DE RESPUESTA EXITOSA:
@@ -133,34 +133,34 @@ const movimientosStockV3 ={
             })
             .then(response => {
                 console.group('✅ Respuesta del Backend');
-                console.log('Response.data:', response.data);
-                console.log('Status lógico:', response.data?.status);
+                console.log('Response:', response);
+                console.log('Status lógico:', response?.status);
                 console.groupEnd();
-                
+
                 // CONTRATO: Verificar status lógico del backend
-                if (response.data && response.data.status === 'ERROR') {
+                if (response && response.status === 'ERROR') {
                     // Error de negocio - rechazar con mensaje del backend
-                    const errorMessage = response.data.mensaje || 'Error de negocio desconocido';
+                    const errorMessage = response.mensaje || 'Error de negocio desconocido';
                     const businessError = new Error(errorMessage);
                     businessError.type = 'BUSINESS_ERROR';
-                    businessError.error = response.data.error;
-                    businessError.data = response.data;
-                    
+                    businessError.error = response.error;
+                    businessError.data = response;
+
                     console.log('❌ Error de negocio:', errorMessage);
                     reject(businessError);
                     return;
                 }
-                
-                if (response.data && response.data.status === 'SUCCESS') {
-                    // Éxito - resolver con response.data
-                    console.log('✅ Operación exitosa:', response.data.mensaje);
-                    resolve(response.data);
+
+                if (response && response.status === 'SUCCESS') {
+                    // Éxito - resolver con response
+                    console.log('✅ Operación exitosa:', response.mensaje);
+                    resolve(response);
                     return;
                 }
-                
+
                 // Si no tiene status, tratar como warning pero continuar
                 console.warn('⚠️ Respuesta sin status definido, asumiendo éxito');
-                resolve(response.data || {});
+                resolve(response || {});
             })
             .catch(error => {
                 console.group('❌ Error HTTP');
