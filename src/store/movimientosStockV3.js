@@ -93,13 +93,13 @@ const movimientosStockV3 ={
 
     /**
      * Crea un movimiento de stock por partida
-     * 
+     *
      * CONTRATO:
-     * - Retorna: response.data (objeto con status, mensaje, data)
-     * - Éxito: HTTP 2xx → resolve(response.data)
-     * - Error: error.response.data.status === "ERROR" → reject con mensaje de negocio
-     * - Error técnico: sin respuesta estructurada del backend → reject con error técnico
-     * 
+     * - Retorna: respuesta (objeto con status, mensaje, data)
+     * - Éxito: respuesta.status === "SUCCESS" → resolve(respuesta)
+     * - Error: respuesta.status === "ERROR" → reject con mensaje de negocio
+     * - Error técnico: sin respuesta del backend → reject con error técnico
+     *
      * ESTRUCTURA DE RESPUESTA EXITOSA:
      * {
      *   status: "SUCCESS",
@@ -131,26 +131,25 @@ const movimientosStockV3 ={
                 Body: payload,
                 Cartel: "Creando Ingreso de Stock por Partida"
             })
-            .then(response => {
+            .then(respuesta => {
                 console.group('✅ Respuesta del Backend');
-                console.log('HTTP Status:', response?.status);
-                console.log('Data:', response?.data);
+                console.log('Status:', respuesta?.status);
+                console.log('Mensaje:', respuesta?.mensaje);
+                console.log('Data:', respuesta?.data);
                 console.groupEnd();
 
-                // Éxito HTTP: resolver con data
-                if (response?.status >= 200 && response?.status < 300) {
-                    console.log('✅ Operación exitosa:', response?.data?.mensaje);
-                    resolve(response?.data);
+                if (respuesta?.status === 'SUCCESS') {
+                    console.log('✅ Operación exitosa:', respuesta?.mensaje);
+                    resolve(respuesta);
                     return;
                 }
 
-                // Cualquier otro status HTTP se considera error técnico
-                const technicalError = new Error('Error técnico en la comunicación');
-                technicalError.type = 'TECHNICAL_ERROR';
-                technicalError.originalResponse = response;
-                technicalError.status = response?.status;
-                console.log('❌ Error técnico: Respuesta inesperada');
-                reject(technicalError);
+                const businessError = new Error(respuesta?.mensaje || 'Error de negocio desconocido');
+                businessError.type = 'BUSINESS_ERROR';
+                businessError.error = respuesta?.error;
+                businessError.data = respuesta;
+                console.log('❌ Error de negocio:', businessError.message);
+                reject(businessError);
             })
             .catch(error => {
                 console.group('❌ Error HTTP');
@@ -173,13 +172,15 @@ const movimientosStockV3 ={
                     return;
                 }
 
-                // Sin respuesta estructurada del backend → Error técnico
-                const technicalError = new Error('Error técnico en la comunicación');
-                technicalError.type = 'TECHNICAL_ERROR';
-                technicalError.originalError = error;
-                technicalError.status = error?.response?.status;
-                console.log('❌ Error técnico');
-                reject(technicalError);
+                if (!error.response) {
+                    const technicalError = new Error('Error técnico');
+                    technicalError.type = 'TECHNICAL_ERROR';
+                    technicalError.originalError = error;
+                    reject(technicalError);
+                    return;
+                }
+
+                reject(error);
             });
         });
     },
